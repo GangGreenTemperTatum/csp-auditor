@@ -102,7 +102,7 @@ CSP Auditor is a Caido plugin that helps you monitor and analyze Content Securit
 
 ### Usage
 
-
+TODO once v1.0 features are built out
 
 <!--![csp-auditor Notification](./public/images/csp-auditor-popup-alert-1.png)
 *csp-auditor notification*-->
@@ -126,4 +126,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 [![Star History Chart](https://api.star-history.com/svg?repos=GangGreenTemperTatum/csp-auditor&type=Date)](https://star-history.com/#GangGreenTemperTatum/csp-auditor&Date)
 
-Made with ❤️ for the Caido community by @GangGreenTemperTatum
+Made with ❤️ for the Caido community by [@GangGreenTemperTatum](https://github.com/GangGreenTemperTatum)
