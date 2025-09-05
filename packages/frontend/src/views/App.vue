@@ -33,10 +33,12 @@ const refreshInterval = ref<NodeJS.Timeout | null>(null);
 const REFRESH_INTERVAL_MS = 5000;
 
 const respectScope = ref(true);
+const createFindings = ref(false);
 
 onMounted(async () => {
   await loadDashboardData();
   await loadScopeSettings();
+  await loadCreateFindingsSettings();
   startAutoRefresh();
 });
 
@@ -143,13 +145,30 @@ const loadScopeSettings = async () => {
   }
 };
 
+const loadCreateFindingsSettings = async () => {
+  try {
+    const findingsSetting = await sdk.backend.getCreateFindings();
+    createFindings.value = findingsSetting;
+  } catch (error) {
+    console.error("Failed to load create findings settings:", error);
+  }
+};
+
 const updateScopeRespecting = async (newValue: boolean) => {
   try {
     await sdk.backend.setScopeRespecting(newValue);
   } catch (error) {
     console.error("Failed to update scope setting:", error);
-    // Revert on error
     respectScope.value = !newValue;
+  }
+};
+
+const updateCreateFindings = async (newValue: boolean) => {
+  try {
+    await sdk.backend.setCreateFindings(newValue);
+  } catch (error) {
+    console.error("Failed to update create findings setting:", error);
+    createFindings.value = !newValue;
   }
 };
 
@@ -322,9 +341,15 @@ const nextPage = () => {
         </div>
       </div>
 
-      <div class="flex gap-2 items-center">
-        <InputSwitch v-model="respectScope" @update:modelValue="updateScopeRespecting" />
-        <span class="text-xs text-gray-600 dark:text-gray-400">Scope</span>
+      <div class="flex gap-4 items-center">
+        <div class="flex items-center gap-2">
+          <InputSwitch v-model="respectScope" @update:modelValue="updateScopeRespecting" />
+          <span class="text-xs text-gray-600 dark:text-gray-400">Scope</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <InputSwitch v-model="createFindings" @update:modelValue="updateCreateFindings" />
+          <span class="text-xs text-gray-600 dark:text-gray-400">Create Findings</span>
+        </div>
         <Button
           label="Refresh"
           icon="pi pi-refresh"

@@ -6,6 +6,7 @@ import type { CspAnalysisResult, CspPolicy, CspVulnerability } from "./types";
 
 const analysisCache = new Map<string, CspAnalysisResult>();
 let respectScope = true;
+let createFindings = false;
 
 const analyzeCspHeaders = async (
   sdk: SDK,
@@ -62,7 +63,7 @@ const getCspStats = async (sdk: SDK): Promise<Record<string, any>> => {
 
     for (const analysis of analyses) {
       for (const vuln of analysis.vulnerabilities) {
-        stats.typeStats[vuln.type] = (stats.typeStats[vuln.type] || 0) + 1;
+        (stats.typeStats as any)[vuln.type] = ((stats.typeStats as any)[vuln.type] || 0) + 1;
       }
     }
 
@@ -128,7 +129,8 @@ const clearCspCache = async (sdk: SDK): Promise<void> => {
 const processWorkflowCspAnalysis = async (
   sdk: SDK,
   requestData: { id: string; host: string; path: string },
-  responseData: { headers: Record<string, string[]> }
+  responseData: { headers: Record<string, string[]> },
+  request?: any
 ): Promise<CspAnalysisResult | null> => {
   try {
     const requestId = requestData.id;
@@ -165,6 +167,30 @@ const processWorkflowCspAnalysis = async (
 
     analysisCache.set(requestId, analysisResult);
 
+    sdk.console.log(`CSP Analysis complete: ${allVulnerabilities.length} vulnerabilities found, createFindings: ${createFindings}`);
+
+    if (createFindings && allVulnerabilities.length > 0 && request) {
+      try {
+        const title = `CSP Vulnerabilities - ${policies.length} polic${policies.length === 1 ? 'y' : 'ies'} found`;
+        const description = `Found ${allVulnerabilities.length} CSP vulnerability/vulnerabilities across ${policies.length} polic${policies.length === 1 ? 'y' : 'ies'}:\n\n` +
+          allVulnerabilities.map(vuln => 
+            `• ${vuln.type} (${vuln.severity}): ${vuln.directive} - ${vuln.description}`
+          ).join('\n');
+
+        await sdk.findings.create({
+          title,
+          description,
+          reporter: "CSP Auditor",
+          request,
+          dedupeKey: `csp-${requestData.host}-${requestData.path}`
+        });
+
+        sdk.console.log(`Created finding for CSP vulnerabilities in ${requestId}`);
+      } catch (error) {
+        sdk.console.error(`Failed to create finding: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    }
+
     return analysisResult;
   } catch (error) {
     sdk.console.error(`CSP analysis failed: ${error instanceof Error ? error.message : String(error)}`);
@@ -182,6 +208,15 @@ const getScopeRespecting = async (sdk: SDK): Promise<boolean> => {
   return respectScope;
 };
 
+const setCreateFindings = async (sdk: SDK, createFindingsEnabled: boolean): Promise<void> => {
+  createFindings = createFindingsEnabled;
+  sdk.console.log(`CSP Auditor findings creation updated: ${createFindings ? 'enabled' : 'disabled'} (value: ${createFindings})`);
+};
+
+const getCreateFindings = async (sdk: SDK): Promise<boolean> => {
+  return createFindings;
+};
+
 export type API = DefineAPI<{
   analyzeCspHeaders: typeof analyzeCspHeaders;
   getCspAnalysis: typeof getCspAnalysis;
@@ -192,6 +227,8 @@ export type API = DefineAPI<{
   processWorkflowCspAnalysis: typeof processWorkflowCspAnalysis;
   setScopeRespecting: typeof setScopeRespecting;
   getScopeRespecting: typeof getScopeRespecting;
+  setCreateFindings: typeof setCreateFindings;
+  getCreateFindings: typeof getCreateFindings;
 }>;
 
 export function init(sdk: SDK<API>) {
@@ -204,6 +241,8 @@ export function init(sdk: SDK<API>) {
   sdk.api.register("processWorkflowCspAnalysis", processWorkflowCspAnalysis);
   sdk.api.register("setScopeRespecting", setScopeRespecting);
   sdk.api.register("getScopeRespecting", getScopeRespecting);
+  sdk.api.register("setCreateFindings", setCreateFindings);
+  sdk.api.register("getCreateFindings", getCreateFindings);
 
   try {
     sdk.events.onInterceptResponse(async (sdk, request, response) => {
@@ -234,7 +273,7 @@ export function init(sdk: SDK<API>) {
             headers: responseHeaders
           };
 
-          await processWorkflowCspAnalysis(sdk, requestData, responseData);
+          await processWorkflowCspAnalysis(sdk, requestData, responseData, request);
         }
       } catch (error) {
         sdk.console.error(`Error processing response: ${error}`);
