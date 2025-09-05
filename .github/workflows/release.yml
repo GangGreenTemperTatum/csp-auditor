@@ -48,7 +48,7 @@ jobs:
         working-directory: dist
         run: |
           VERSION=$(unzip -p plugin_package.zip manifest.json | jq -r .version)
-          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
 
       - name: Create release
         uses: ncipollo/release-action@v1
