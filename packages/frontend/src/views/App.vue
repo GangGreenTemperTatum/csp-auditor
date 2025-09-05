@@ -4,6 +4,7 @@ import Button from "primevue/button";
 import Card from "primevue/card";
 import Divider from "primevue/divider";
 import InputSwitch from "primevue/inputswitch";
+import InputText from "primevue/inputtext";
 import ProgressBar from "primevue/progressbar";
 import TabView from "primevue/tabview";
 import TabPanel from "primevue/tabpanel";
@@ -11,7 +12,8 @@ import Tag from "primevue/tag";
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 
 import { useSDK } from "@/plugins/sdk";
-import type { CspAnalysisResult, CspStats } from "@/types";
+import type { CspAnalysisResult, CspStats, BypassEntry } from "@/types";
+import { getBypassesForVulnerability, getDifficultyColor, type BypassPayload } from "@/data/bypass-payloads";
 
 const sdk = useSDK();
 
@@ -79,11 +81,17 @@ const showVulnerabilityModal = ref(false);
 const selectedVulnerability = ref<any>(null);
 const selectedAnalysisForModal = ref<CspAnalysisResult | null>(null);
 
+// CSP Bypass data
+const bypassEntries = ref<BypassEntry[]>([]);
+const loadingBypasses = ref(false);
+const bypassSearchQuery = ref('');
+
 onMounted(async () => {
   await loadDashboardData();
   await loadScopeSettings();
   await loadCreateFindingsSettings();
   await loadCspCheckSettings();
+  await loadBypassData();
   startAutoRefresh();
 });
 
@@ -465,6 +473,63 @@ const copyVulnerabilities = async (vulnerabilities: any[]) => {
   await copyToClipboard(vulnText, 'Vulnerabilities');
 };
 
+const copyBypassPayload = async (payload: string, name: string) => {
+  await copyToClipboard(payload, `${name} Payload`);
+};
+
+const getVulnerabilityBypasses = (vulnerabilityType: string): BypassPayload[] => {
+  return getBypassesForVulnerability(vulnerabilityType, bypassEntries.value);
+};
+
+const loadBypassData = async () => {
+  loadingBypasses.value = true;
+  try {
+    // Load the full bypass database from backend
+    const bypasses = await sdk.backend.getBypassDatabase();
+    bypassEntries.value = bypasses;
+    console.log(`Loaded ${bypasses.length} bypass payloads from database`);
+  } catch (error) {
+    console.error('Failed to load bypass data:', error);
+    // Fallback to empty array
+    bypassEntries.value = [];
+  } finally {
+    loadingBypasses.value = false;
+  }
+};
+
+const copyBypassCode = async (code: string, domain: string) => {
+  await copyToClipboard(code, `${domain} Bypass`);
+};
+
+// Filtered bypass entries based on search query
+const filteredBypassEntries = computed(() => {
+  if (!bypassSearchQuery.value.trim()) {
+    return bypassEntries.value;
+  }
+  
+  const query = bypassSearchQuery.value.toLowerCase();
+  return bypassEntries.value.filter(entry => 
+    entry.domain.toLowerCase().includes(query) ||
+    entry.technique.toLowerCase().includes(query) ||
+    entry.code.toLowerCase().includes(query)
+  );
+});
+
+const getTechniqueColor = (technique: string): string => {
+  switch (technique) {
+    case 'JSONP': return 'success';
+    case 'AngularJS': return 'danger';
+    case 'Alpine.js': return 'info';
+    case 'HTMX': return 'warning';
+    case 'Hyperscript': return 'secondary';
+    case 'Script Injection': return 'danger';
+    case 'Event Handler': return 'warning';
+    case 'Link Preload': return 'info';
+    case 'Iframe Injection': return 'danger';
+    default: return 'secondary';
+  }
+};
+
 
 const goToPage = (page: number) => {
   if (page >= 1 && page <= totalPages.value) {
@@ -691,15 +756,95 @@ const nextPage = () => {
                 </template>
               </Card>
 
-              <!-- Right: Reserved for Future Feature -->
+              <!-- Right: CSP Bypass Database -->
               <Card>
-                <template #title>Policy Recommendations</template>
+                <template #title>
+                  <div class="flex items-center justify-between">
+                    <span>🎯 CSP Bypass Database</span>
+                    <div class="flex items-center gap-2">
+                      <Badge :value="bypassEntries.length" severity="info" class="text-xs" />
+                      <a 
+                        href="https://github.com/GangGreenTemperTatum/csp-auditor" 
+                        target="_blank" 
+                        class="text-xs text-blue-500 hover:text-blue-700 dark:text-blue-400"
+                        title="View CSP Auditor project"
+                      >
+                        GitHub
+                      </a>
+                    </div>
+                  </div>
+                </template>
                 <template #content>
-                  <div class="text-center text-gray-500 py-16">
-                    <i class="pi pi-wrench text-4xl mb-4 block"></i>
-                    <div class="text-lg font-medium mb-2">Coming Soon</div>
+                  <div v-if="loadingBypasses" class="text-center py-8">
+                    <ProgressBar mode="indeterminate" class="w-full" />
+                    <p class="text-sm text-gray-500 mt-2">Loading bypass payloads...</p>
+                  </div>
+                  
+                  <div v-else-if="bypassEntries.length > 0" class="space-y-3">
+                    <div class="text-xs text-gray-600 dark:text-gray-400 mb-3">
+                      Real-world CSP bypass techniques from security research ({{ bypassEntries.length }} bypasses). Click to copy payloads.
+                    </div>
+                    
+                    <!-- Search Box -->
+                    <div class="relative mb-4">
+                      <InputText
+                        v-model="bypassSearchQuery"
+                        placeholder="Search by domain, technique, or code..."
+                        class="w-full pl-10"
+                        size="small"
+                      />
+                      <i class="pi pi-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                      <div v-if="bypassSearchQuery" class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        Showing {{ filteredBypassEntries.length }} of {{ bypassEntries.length }} bypasses
+                      </div>
+                    </div>
+                    
+                    <div class="max-h-80 overflow-y-auto space-y-2">
+                      <div 
+                        v-for="entry in filteredBypassEntries" 
+                        :key="entry.id"
+                        class="border border-gray-200 dark:border-gray-700 rounded-lg p-3 hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer transition-colors"
+                        @click="copyBypassCode(entry.code, entry.domain)"
+                        :title="`Click to copy ${entry.domain} bypass payload`"
+                      >
+                        <div class="flex items-center justify-between mb-2">
+                          <div class="flex items-center gap-2">
+                            <span class="text-sm font-mono text-blue-600 dark:text-blue-400">
+                              {{ entry.domain }}
+                            </span>
+                            <Tag :value="entry.technique" :severity="getTechniqueColor(entry.technique)" class="text-xs" />
+                          </div>
+                          <Button
+                            icon="pi pi-copy"
+                            size="small"
+                            severity="secondary"
+                            text
+                            @click.stop="copyBypassCode(entry.code, entry.domain)"
+                            title="Copy payload"
+                          />
+                        </div>
+                        
+                        <div class="bg-gray-900 text-green-400 p-2 rounded text-xs font-mono overflow-x-auto">
+                          <code>{{ entry.code }}</code>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div v-if="filteredBypassEntries.length === 0" class="text-center text-gray-500 py-8">
+                      <i class="pi pi-search text-2xl mb-2 block"></i>
+                      <div class="text-sm">No bypasses found matching "{{ bypassSearchQuery }}"</div>
+                      <div class="text-xs mt-1">Try searching by domain, technique, or payload content</div>
+                    </div>
+                    
+                    <div v-if="filteredBypassEntries.length > 0" class="text-xs text-gray-500 dark:text-gray-400 text-center mt-4 pt-3 border-t border-gray-200 dark:border-gray-700">
+                      Want to contribute? Add bypasses to <code>data/csp-bypass-data.tsv</code>
+                    </div>
+                  </div>
+                  
+                  <div v-else class="text-center text-gray-500 py-8">
+                    <i class="pi pi-exclamation-triangle text-4xl mb-4 block"></i>
                     <div class="text-sm">
-                      Advanced CSP policy generation and recommendations will be available here
+                      No bypass payloads loaded. Check data/csp-bypass-data.tsv
                     </div>
                   </div>
                 </template>
@@ -767,7 +912,7 @@ const nextPage = () => {
                   <template v-for="analysis in paginatedAnalyses" :key="analysis.requestId">
                     <!-- Regular Table Row -->
                     <tr
-                      class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer"
+                      class="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-900 cursor-pointer"
                       :class="{ 'bg-blue-50 dark:bg-blue-950': selectedAnalysis?.requestId === analysis.requestId }"
                       @click="viewAnalysisDetails(analysis)"
                     >
@@ -1030,7 +1175,7 @@ const nextPage = () => {
                       <div
                         v-for="check in checks"
                         :key="check.id"
-                        class="flex items-start gap-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                        class="flex items-start gap-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors"
                       >
                         <InputSwitch 
                           v-model="cspCheckSettings[check.id as keyof typeof cspCheckSettings].enabled" 
@@ -1132,6 +1277,71 @@ const nextPage = () => {
               <p class="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
                 {{ selectedVulnerability.remediation }}
               </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bypass Examples Section -->
+        <div v-if="getVulnerabilityBypasses(selectedVulnerability.type).length > 0" class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+          <h4 class="font-medium text-gray-900 dark:text-white mb-3">
+            🎯 Bypass Examples ({{ getVulnerabilityBypasses(selectedVulnerability.type).length }})
+            <span class="text-xs text-gray-500 dark:text-gray-400 font-normal ml-2">
+              from CSPBypass database
+            </span>
+          </h4>
+          <div class="space-y-3">
+            <div 
+              v-for="bypass in getVulnerabilityBypasses(selectedVulnerability.type)" 
+              :key="bypass.id"
+              class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border-l-4"
+              :class="{
+                'border-green-500': bypass.difficulty === 'easy',
+                'border-yellow-500': bypass.difficulty === 'medium', 
+                'border-red-500': bypass.difficulty === 'hard'
+              }"
+            >
+              <div class="flex items-start justify-between mb-2">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <h5 class="font-medium text-gray-900 dark:text-white text-sm">{{ bypass.name }}</h5>
+                  <Tag :value="bypass.difficulty" :severity="getDifficultyColor(bypass.difficulty)" class="text-xs" />
+                  <span class="text-xs text-gray-500 dark:text-gray-400 bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">
+                    {{ bypass.technique }}
+                  </span>
+                  <span v-if="bypass.domain" class="text-xs text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900 px-2 py-1 rounded font-mono">
+                    {{ bypass.domain }}
+                  </span>
+                  <span v-if="bypass.source === 'cspbypass'" class="text-xs text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900 px-2 py-1 rounded">
+                    CSPBypass
+                  </span>
+                </div>
+                <Button
+                  icon="pi pi-copy"
+                  size="small"
+                  severity="secondary"
+                  text
+                  @click="copyBypassPayload(bypass.payload, bypass.name)"
+                  :title="`Copy ${bypass.name} payload`"
+                />
+              </div>
+              
+              <p class="text-xs text-gray-600 dark:text-gray-400 mb-3">{{ bypass.description }}</p>
+              
+              <div class="bg-gray-900 text-green-400 p-3 rounded-md font-mono text-xs overflow-x-auto">
+                <code>{{ bypass.payload }}</code>
+              </div>
+              
+              <div v-if="bypass.requirements" class="mt-2">
+                <span class="text-xs font-medium text-gray-600 dark:text-gray-400">Requirements:</span>
+                <div class="flex flex-wrap gap-1 mt-1">
+                  <span 
+                    v-for="req in bypass.requirements" 
+                    :key="req"
+                    class="text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded"
+                  >
+                    {{ req }}
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         </div>

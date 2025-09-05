@@ -17,7 +17,15 @@ export interface FrontendSDK {
     getCspCheckSettings: () => Promise<Record<string, boolean>>;
     setCspCheckSettings: (settings: Record<string, boolean>) => Promise<void>;
     updateCspCheckSetting: (checkId: string, enabled: boolean) => Promise<void>;
+    getBypassDatabase: () => Promise<BypassEntry[]>;
   };
+}
+
+export interface BypassEntry {
+  domain: string;
+  code: string;
+  technique: string;
+  id: string;
 }
 
 export interface CspSource {

@@ -2,7 +2,7 @@
 
 <div align="center">
 
-_A comprehensive Content Security Policy (CSP) vulnerability scanner plugin for Caido, designed to automatically detect and analyze CSP headers for common security misconfigurations and vulnerabilities._
+_A comprehensive Content Security Policy (CSP) vulnerability scanner plugin for Caido, designed to automatically detect and analyze CSP headers for common security misconfigurations and vulnerabilities with easily available applicable gadgets._
 
 _Hack the planet 🤘_
 
@@ -28,35 +28,56 @@ _Hack the planet 🤘_
 
 - [CSP Auditor](#csp-auditor)
   - [Overview](#overview)
-  - [TODO](#todo)
+  - [Features](#features)
+  - [Development TODO](#development-todo)
+    - [CSP Bypass Integration (COA)](#csp-bypass-integration-coa)
   - [Quick Start](#quick-start)
     - [Prerequisites](#prerequisites)
     - [Installation](#installation)
     - [Install from source (without auto-updates):](#install-from-source-without-auto-updates)
     - [Usage](#usage)
   - [Contributing](#contributing)
+    - [Adding New Bypass Gadgets](#adding-new-bypass-gadgets)
+    - [General Development](#general-development)
   - [License](#license)
   - [Star History](#star-history)
 
 
 ## Overview
 
-🚧 **Note**: CSP Auditor is still in active development, not yet submitted to the Caido plugin store but will be done by September 2025.
+CSP Auditor is a Caido plugin that helps you monitor and analyze Content Security Policies (CSP) in web applications, it is designed to mimic the [Burp Suite extension](https://github.com/portswigger/csp-auditor)'s functionality with additional improvements and integration with [`cspbypass.com`](https://cspbypass.com) for a built-in bypass database of real-world CSP bypass techniques, directly in Caido!
 
-CSP Auditor is a Caido plugin that helps you monitor and analyze Content Security Policies (CSP) in web applications, it is designed to mimic the [Burp Suite extension](https://github.com/portswigger/csp-auditor)'s functionality with additional improvements.
+## Features
+
+- **Real-time CSP Analysis**: Automatically analyzes CSP headers from intercepted HTTP responses
+- **34+ Vulnerability Checks**: Comprehensive detection of CSP misconfigurations including:
+  - Script wildcard sources and unsafe directives
+  - JSONP bypass risks and AngularJS template injection
+  - AI/ML and Web3 service integration risks
+  - Missing Trusted Types and essential directives
+  - Deprecated headers and vulnerable library hosts
+- **209+ Bypass Payloads**: Integrated database of real-world CSP bypass techniques from [CSPBypass research](./data/csp-bypass-data.tsv)
+   > A thank you to Rennie Pak and contributors of the project for the original [CSP gadgets](https://cspbypass.com/) 🙏
+- **Searchable Bypass Database**: Filter and copy bypass payloads directly from the plugin interface
+- **Vulnerability Modals**: Detailed vulnerability information with relevant bypass examples and payload copying
+- **Configurable Detection**: Enable/disable specific vulnerability checks via settings panel
+- **Caido Findings Integration**: Automatically create findings for detected vulnerabilities
+- **Scope Awareness**: Respect Caido's project scope settings for targeted analysis
+- **Export Functionality**: Export findings as JSON or CSV for reporting
+- **Dashboard Statistics**: Overview of analyzed policies, vulnerabilities by severity, and detection trends
 
 <!-- Come [join](https://discord.com/invite/Xkafzujmuh) the **awesome** Caido discord channel and come speak to me about CSP Auditor in it's [dedicated channel](https://discord.com/channels/843915806748180492/1407063905511145653)! -->
 
-## TODO
+---
+
+## Development TODO
 
 ### CSP Bypass Integration (COA)
-- [ ] Phase 1: Enhanced vulnerability modal with bypass examples and payload copying
-- [ ] Phase 2: Dedicated bypass testing tab with syntax highlighting 
+- [x] Phase 1: Enhanced vulnerability modal with bypass examples and payload copying
+- [ ] Phase 2: Dedicated bypass testing tab with syntax highlighting
 - [ ] Phase 3: Inline bypass indicators and real-time analysis
 
-### General
-- [ ] Add images to docs and basic usage
-- [ ] Add more CSP directives support and toggle certain CSP directives
+---
 
 ## Quick Start
 
@@ -101,6 +122,8 @@ CSP Auditor is a Caido plugin that helps you monitor and analyze Content Securit
    - Click "Install from file"
    - Select the built plugin file from the `dist/` directory
 
+---
+
 ### Usage
 
 TODO once v1.0 features are built out
@@ -111,7 +134,37 @@ TODO once v1.0 features are built out
 <!--![csp-auditor Notification](./public/images/csp-auditor-popup-alert-2.png)-->
 <!--*csp-auditor notification*-->
 
+---
+
 ## Contributing
+
+### Adding New Bypass Gadgets
+
+CSP Auditor uses a comprehensive database of bypass techniques sourced from security research. To add new bypass gadgets:
+
+1. **Edit the TSV file**: Add new entries to `data/csp-bypass-data.tsv` in the following format:
+   ```
+   domain.example.com	<script src="https://domain.example.com/payload.js"></script>
+   ```
+   - **Column 1**: Domain or service name
+   - **Column 2**: The actual bypass payload/code
+   - Use TAB character as separator (not spaces)
+
+2. **Technique Detection**: The plugin automatically categorizes bypasses by technique:
+   - JSONP (contains `callback=` or `cb=`)
+   - AngularJS (contains `ng-` or `angular`)
+   - Alpine.js (contains `x-init` or `alpine`)
+   - HTMX (contains `hx-`)
+   - Hyperscript (contains `_="`)
+   - Script Injection (contains `<script`)
+   - Event Handler (contains `<img` and `onerror`)
+   - Link Preload (contains `<link` and `onload`)
+   - Iframe Injection (contains `<iframe`)
+   - Generic XSS (fallback category)
+
+3. **Testing**: After adding entries, rebuild the plugin with `pnpm build` and test that new bypasses appear in the searchable database panel.
+
+### General Development
 
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/amazing-feature`)
@@ -119,9 +172,13 @@ TODO once v1.0 features are built out
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
+---
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+---
 
 ## Star History
 

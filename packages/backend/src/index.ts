@@ -3,6 +3,7 @@ import type { DefineAPI, SDK } from "caido:plugin";
 import { CspParser } from './csp-parser';
 import { EnhancedCspAnalyzer } from './enhanced-analyzer';
 import type { CspAnalysisResult, CspPolicy, CspVulnerability } from "./types";
+import { getCSPBypassData, getBypassCount } from './bypass-database';
 
 const analysisCache = new Map<string, CspAnalysisResult>();
 let respectScope = true;
@@ -255,6 +256,62 @@ const updateCspCheckSetting = async (sdk: SDK, checkId: string, enabled: boolean
   sdk.console.log(`CSP check setting updated: ${checkId} = ${enabled}`);
 };
 
+interface BypassEntry {
+  domain: string;
+  code: string;
+  technique: string;
+  id: string;
+}
+
+const getBypassDatabase = async (sdk: SDK): Promise<BypassEntry[]> => {
+  try {
+    const bypassCount = getBypassCount();
+    sdk.console.log(`Loading CSP bypass database (${bypassCount} entries)`);
+    
+    const tsvContent = getCSPBypassData();
+    const entries = parseTSV(tsvContent);
+    sdk.console.log(`Successfully loaded ${entries.length} bypass entries from TSV data`);
+    return entries;
+    
+  } catch (error) {
+    sdk.console.error(`Failed to load bypass database: ${error instanceof Error ? error.message : String(error)}`);
+    return [];
+  }
+};
+
+const parseTSV = (tsvContent: string): BypassEntry[] => {
+  const lines = tsvContent.trim().split('\n');
+  const entries: BypassEntry[] = [];
+  
+  // Skip header line
+  for (let i = 1; i < lines.length; i++) {
+    const [domain, code] = lines[i].split('\t');
+    if (domain && code) {
+      entries.push({
+        domain: domain.trim(),
+        code: code.trim(),
+        technique: detectTechnique(code.trim()),
+        id: `${domain.trim()}-${i}`
+      });
+    }
+  }
+  
+  return entries;
+};
+
+const detectTechnique = (code: string): string => {
+  if (code.includes('callback=') || code.includes('cb=')) return 'JSONP';
+  if (code.includes('ng-') || code.includes('angular')) return 'AngularJS';
+  if (code.includes('x-init') || code.includes('alpine')) return 'Alpine.js';
+  if (code.includes('hx-')) return 'HTMX';
+  if (code.includes('_="')) return 'Hyperscript';
+  if (code.includes('<script')) return 'Script Injection';
+  if (code.includes('<img') && code.includes('onerror')) return 'Event Handler';
+  if (code.includes('<link') && code.includes('onload')) return 'Link Preload';
+  if (code.includes('<iframe')) return 'Iframe Injection';
+  return 'XSS';
+};
+
 export type API = DefineAPI<{
   analyzeCspHeaders: typeof analyzeCspHeaders;
   getCspAnalysis: typeof getCspAnalysis;
@@ -270,6 +327,7 @@ export type API = DefineAPI<{
   getCspCheckSettings: typeof getCspCheckSettings;
   setCspCheckSettings: typeof setCspCheckSettings;
   updateCspCheckSetting: typeof updateCspCheckSetting;
+  getBypassDatabase: typeof getBypassDatabase;
 }>;
 
 export function init(sdk: SDK<API>) {
@@ -287,6 +345,7 @@ export function init(sdk: SDK<API>) {
   sdk.api.register("getCspCheckSettings", getCspCheckSettings);
   sdk.api.register("setCspCheckSettings", setCspCheckSettings);
   sdk.api.register("updateCspCheckSetting", updateCspCheckSetting);
+  sdk.api.register("getBypassDatabase", getBypassDatabase);
 
   try {
     sdk.events.onInterceptResponse(async (sdk, request, response) => {
