@@ -24,6 +24,6 @@ repos:
       # Ensure our GH actions are pinned to a specific hash
       - id: check-github-actions
         name: Check GitHub Actions for Pinned Dependencies
-        entry: python .scripts/check_pinned_hash_dependencies.py
+        entry: python .hooks/check_pinned_hash_dependencies.py
         language: python
         files: \.github/.*\.yml$
