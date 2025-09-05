@@ -585,8 +585,7 @@ const nextPage = () => {
                   <tr class="border-b border-gray-200 dark:border-gray-700">
                     <th class="text-left p-3 font-medium text-gray-700 dark:text-gray-300" style="width: 120px;">Request ID</th>
                     <th class="text-left p-3 font-medium text-gray-700 dark:text-gray-300" style="width: 150px;">Timestamp</th>
-                    <th class="text-left p-3 font-medium text-gray-700 dark:text-gray-300" style="width: 110px;">Host</th>
-                    <th class="text-left p-3 font-medium text-gray-700 dark:text-gray-300" style="min-width: 280px;">Path</th>
+                    <th class="text-left p-3 font-medium text-gray-700 dark:text-gray-300" style="min-width: 600px;">Host / Path</th>
                     <th class="text-left p-3 font-medium text-gray-700 dark:text-gray-300" style="min-width: 140px;">Vulnerabilities</th>
                     <th class="text-left p-3 font-medium text-gray-700 dark:text-gray-300" style="width: 80px;">Policies</th>
                   </tr>
@@ -607,15 +606,15 @@ const nextPage = () => {
                       <td class="p-3" style="width: 150px;">
                         <span class="text-sm">{{ formatDate(analysis.analyzedAt) }}</span>
                       </td>
-                      <td class="p-3" style="width: 110px;">
-                        <span class="text-sm font-medium" :title="extractHostAndPath(analysis).host">
-                          {{ extractHostAndPath(analysis).host.length > 15 ? extractHostAndPath(analysis).host.substring(0, 15) + '...' : extractHostAndPath(analysis).host }}
-                        </span>
-                      </td>
-                      <td class="p-3" style="min-width: 280px;">
-                        <span class="text-sm text-gray-600 dark:text-gray-400" :title="extractHostAndPath(analysis).path">
-                          {{ truncatePath(extractHostAndPath(analysis).path, 60) }}
-                        </span>
+                      <td class="p-3" style="min-width: 600px;">
+                        <div class="flex flex-col gap-1">
+                          <span class="text-sm font-medium text-gray-900 dark:text-white" :title="extractHostAndPath(analysis).host">
+                            {{ extractHostAndPath(analysis).host }}
+                          </span>
+                          <span class="text-xs text-gray-600 dark:text-gray-400" :title="extractHostAndPath(analysis).path">
+                            {{ extractHostAndPath(analysis).path }}
+                          </span>
+                        </div>
                       </td>
                       <td class="p-3" style="min-width: 140px;">
                         <div class="flex gap-1 flex-wrap">
