@@ -257,7 +257,6 @@ const paginatedAnalyses = computed(() => {
 });
 
 const viewAnalysisDetails = (analysisData: CspAnalysisResult) => {
-  // Toggle selection - if same analysis is clicked, close it
   if (selectedAnalysis.value?.requestId === analysisData.requestId) {
     selectedAnalysis.value = null;
   } else {
@@ -280,6 +279,7 @@ const copyVulnerabilities = async (vulnerabilities: any[]) => {
   ).join('\n\n');
   await copyToClipboard(vulnText, 'Vulnerabilities');
 };
+
 
 const goToPage = (page: number) => {
   if (page >= 1 && page <= totalPages.value) {
@@ -654,14 +654,13 @@ const nextPage = () => {
                           <div v-if="selectedAnalysis.vulnerabilities.length > 0">
                             <div class="flex items-center justify-between mb-3">
                               <h3 class="text-lg font-semibold">Vulnerabilities Found</h3>
-                              <Button
-                                icon="pi pi-copy"
-                                size="small"
-                                severity="secondary"
+                              <button
                                 @click="copyVulnerabilities(selectedAnalysis.vulnerabilities)"
+                                class="text-sm text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
                                 title="Copy all vulnerabilities to clipboard"
-                                outlined
-                              />
+                              >
+                                📋 Copy All
+                              </button>
                             </div>
                             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
                               <div
@@ -703,14 +702,13 @@ const nextPage = () => {
                                 <div class="flex items-center justify-between mb-2">
                                   <h4 class="font-medium text-gray-900 dark:text-white">{{ policy.headerName }}</h4>
                                   <div class="flex gap-2 items-center">
-                                    <Button
-                                      icon="pi pi-copy"
-                                      size="small"
-                                      severity="secondary"
+                                    <button
                                       @click="copyToClipboard(policy.headerValue, 'CSP Policy')"
+                                      class="text-xs text-blue-500 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
                                       title="Copy CSP policy to clipboard"
-                                      outlined
-                                    />
+                                    >
+                                      📋 Copy
+                                    </button>
                                     <Badge
                                       v-if="policy.isReportOnly"
                                       value="Report Only"
