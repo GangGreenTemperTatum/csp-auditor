@@ -20,7 +20,6 @@ const stats = ref<CspStats>({
   lastAnalyzed: null,
 });
 
-const recentAnalyses = ref<CspAnalysisResult[]>([]);
 const allAnalyses = ref<CspAnalysisResult[]>([]);
 const loading = ref(false);
 const selectedAnalysis = ref<CspAnalysisResult | null>(null);
@@ -29,7 +28,7 @@ const currentPage = ref(1);
 const itemsPerPage = ref(10);
 
 const autoRefreshEnabled = ref(true);
-const refreshInterval = ref<NodeJS.Timeout | null>(null);
+const refreshInterval = ref<number | null>(null);
 const REFRESH_INTERVAL_MS = 5000;
 
 const respectScope = ref(true);
@@ -100,7 +99,7 @@ const refreshData = async () => {
 
 const startAutoRefresh = () => {
   if (autoRefreshEnabled.value && !refreshInterval.value) {
-    refreshInterval.value = setInterval(async () => {
+    refreshInterval.value = window.setInterval(async () => {
       if (autoRefreshEnabled.value && !loading.value) {
         const currentTotalAnalyses = stats.value.totalAnalyses;
         
@@ -122,7 +121,7 @@ const startAutoRefresh = () => {
 
 const stopAutoRefresh = () => {
   if (refreshInterval.value) {
-    clearInterval(refreshInterval.value);
+    window.clearInterval(refreshInterval.value);
     refreshInterval.value = null;
   }
 };
@@ -234,10 +233,10 @@ const extractHostAndPath = (analysis: CspAnalysisResult) => {
     } catch (error) {
       const parts = firstPolicy.url.split('/');
       if (parts.length >= 1) {
-        const hostPart = parts[0].replace(/^https?:\/\//, '');
+        const hostPart = parts[0]?.replace(/^https?:\/\//, '') || 'N/A';
         const pathPart = '/' + parts.slice(1).join('/');
         return {
-          host: hostPart || 'N/A',
+          host: hostPart,
           path: pathPart === '/' && parts.length === 1 ? '/' : pathPart
         };
       }

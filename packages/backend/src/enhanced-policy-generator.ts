@@ -1,5 +1,4 @@
 import type { CspAnalysisResult } from "./types";
-import { EnhancedBlacklistManager } from "./enhanced-blacklists";
 
 /**
  * Next-Generation CSP Policy Generator
@@ -123,7 +122,7 @@ export class EnhancedPolicyGenerator {
       allowInlineScripts: false, // Never recommend this
       useStrictDynamic: securityLevel === 'strict',
       enableTrustedTypes: true,
-      allowDataUris: securityLevel === 'permissive',
+      allowDataUris: false, // securityLevel === 'permissive' - removed invalid comparison
       includeCsp3Features: true
     };
 
@@ -315,7 +314,9 @@ export class EnhancedPolicyGenerator {
       const parts = directive.split(/\s+/);
       const name = parts[0];
       const values = parts.slice(1);
-      directiveMap.set(name, values);
+      if (name) {
+        directiveMap.set(name, values);
+      }
     }
 
     // Scoring criteria

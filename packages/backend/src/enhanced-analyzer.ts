@@ -1,5 +1,4 @@
-import { EnhancedBlacklistManager } from "./enhanced-blacklists";
-import type { CspDirective, CspPolicy, CspVulnerability, Severity, VulnerabilityType } from "./types";
+import type { CspPolicy, CspVulnerability, Severity, VulnerabilityType } from "./types";
 import { generateId } from "./utils";
 
 /**
@@ -7,7 +6,7 @@ import { generateId } from "./utils";
  * Beyond legacy limitations - modern CSP Level 3 analysis
  */
 export class EnhancedCspAnalyzer {
-  
+
   static analyzePolicy(policy: CspPolicy): CspVulnerability[] {
     const vulnerabilities: CspVulnerability[] = [];
 
@@ -50,7 +49,7 @@ export class EnhancedCspAnalyzer {
           // Unsafe inline - CRITICAL
           if (value === "'unsafe-inline'") {
             vulnerabilities.push(this.createVulnerability({
-              type: "script-unsafe-inline", 
+              type: "script-unsafe-inline",
               severity: "high",
               directive: directive.name,
               value: value,
@@ -62,11 +61,11 @@ export class EnhancedCspAnalyzer {
             }));
           }
 
-          // Unsafe eval - CRITICAL  
+          // Unsafe eval - CRITICAL
           if (value === "'unsafe-eval'") {
             vulnerabilities.push(this.createVulnerability({
               type: "script-unsafe-eval",
-              severity: "high", 
+              severity: "high",
               directive: directive.name,
               value: value,
               title: "Critical: Dynamic Code Execution Allowed",
@@ -125,13 +124,13 @@ export class EnhancedCspAnalyzer {
 
     // JSONP callback bypasses
     this.checkJsonpBypasses(policy, vulnerabilities);
-    
+
     // AngularJS template injection
     this.checkAngularJsBypasses(policy, vulnerabilities);
-    
-    // Service worker bypasses  
+
+    // Service worker bypasses
     this.checkServiceWorkerBypasses(policy, vulnerabilities);
-    
+
     // CSS injection attacks
     this.checkCssInjectionRisks(policy, vulnerabilities);
 
@@ -164,7 +163,7 @@ export class EnhancedCspAnalyzer {
     if (!policy.directives.has("require-trusted-types-for")) {
       vulnerabilities.push(this.createVulnerability({
         type: "missing-require-trusted-types",
-        severity: "medium", 
+        severity: "medium",
         directive: "require-trusted-types-for",
         value: "missing",
         title: "Trusted Types Not Required",
@@ -209,7 +208,7 @@ export class EnhancedCspAnalyzer {
       vulnerabilities.push(this.createVulnerability({
         type: "permissive-base-uri",
         severity: "medium",
-        directive: "base-uri", 
+        directive: "base-uri",
         value: baseUri?.values.join(" ") || "missing",
         title: "Permissive Base URI Policy",
         description: "Unrestricted base URI can enable injection attacks",
@@ -235,7 +234,7 @@ export class EnhancedCspAnalyzer {
 
     // Cryptocurrency/Web3 risks
     const web3Hosts = [
-      "metamask.io", "walletconnect.org", "uniswap.org", 
+      "metamask.io", "walletconnect.org", "uniswap.org",
       "ethereum.org", "web3.storage"
     ];
 
@@ -246,7 +245,7 @@ export class EnhancedCspAnalyzer {
     ];
 
     this.checkModernHostRisks(policy, vulnerabilities, aiMlHosts, "ai-ml-host", "AI/ML Service Integration Risk");
-    this.checkModernHostRisks(policy, vulnerabilities, web3Hosts, "web3-host", "Web3/Crypto Integration Risk");  
+    this.checkModernHostRisks(policy, vulnerabilities, web3Hosts, "web3-host", "Web3/Crypto Integration Risk");
     this.checkModernHostRisks(policy, vulnerabilities, modernCdnRisks, "cdn-supply-chain", "CDN Supply Chain Risk");
 
     return vulnerabilities;
@@ -288,10 +287,10 @@ export class EnhancedCspAnalyzer {
       if (value.includes("angular") && !value.includes("angular.min.js")) {
         vulnerabilities.push(this.createVulnerability({
           type: "angularjs-bypass",
-          severity: "high", 
+          severity: "high",
           directive: "script-src",
           value: value,
-          title: "AngularJS Template Injection Risk", 
+          title: "AngularJS Template Injection Risk",
           description: "AngularJS versions allow template injection bypasses of CSP",
           remediation: "Upgrade to Angular 2+ or remove AngularJS entirely",
           cweId: 79,
@@ -306,18 +305,16 @@ export class EnhancedCspAnalyzer {
     if (!scriptSrc) return;
 
     let hasNonce = false;
-    let hasHash = false;
 
     for (const value of scriptSrc.values) {
       if (value.startsWith("'nonce-")) hasNonce = true;
-      if (value.startsWith("'sha")) hasHash = true;
     }
 
     if (hasNonce && scriptSrc.values.includes("'unsafe-inline'")) {
       vulnerabilities.push(this.createVulnerability({
         type: "nonce-unsafe-inline-conflict",
         severity: "medium",
-        directive: "script-src", 
+        directive: "script-src",
         value: "'unsafe-inline'",
         title: "Nonce Security Weakened by unsafe-inline",
         description: "Nonce protection is bypassed when 'unsafe-inline' is also present",
@@ -328,7 +325,7 @@ export class EnhancedCspAnalyzer {
   }
 
   private static checkModernHostRisks(
-    policy: CspPolicy, 
+    policy: CspPolicy,
     vulnerabilities: CspVulnerability[],
     riskHosts: string[],
     type: string,
@@ -398,21 +395,21 @@ export class EnhancedCspAnalyzer {
   }
 
   // Additional modern CSP analysis methods...
-  private static checkServiceWorkerBypasses(policy: CspPolicy, vulnerabilities: CspVulnerability[]): void {
+  private static checkServiceWorkerBypasses(_policy: CspPolicy, _vulnerabilities: CspVulnerability[]): void {
     // Service worker bypass analysis
   }
 
-  private static checkCssInjectionRisks(policy: CspPolicy, vulnerabilities: CspVulnerability[]): void {
+  private static checkCssInjectionRisks(_policy: CspPolicy, _vulnerabilities: CspVulnerability[]): void {
     // CSS injection and data exfiltration analysis
   }
 
-  private static checkWasmThreats(policy: CspPolicy, vulnerabilities: CspVulnerability[]): void {
+  private static checkWasmThreats(_policy: CspPolicy, _vulnerabilities: CspVulnerability[]): void {
     // WebAssembly security analysis
   }
 
   private static analyzeDeprecatedFeatures(policy: CspPolicy): CspVulnerability[] {
     const vulnerabilities: CspVulnerability[] = [];
-    
+
     // Enhanced deprecated feature detection
     if (policy.isDeprecated || !["content-security-policy", "content-security-policy-report-only"].includes(policy.headerName.toLowerCase())) {
       vulnerabilities.push(this.createVulnerability({

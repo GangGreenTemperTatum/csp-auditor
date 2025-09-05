@@ -1,22 +1,21 @@
-import type { API } from '@caido/sdk-frontend';
-
-// Define the backend endpoints that our plugin provides
-// Note: These match the actual backend function signatures (without SDK parameter)
-export type BackendEndpoints = {
-  analyzeCspHeaders: (requestId: string) => Promise<CspAnalysisResult | null>;
-  getCspAnalysis: (requestId: string) => Promise<CspAnalysisResult | null>;
-  getAllCspAnalyses: () => Promise<CspAnalysisResult[]>;
-  getCspStats: () => Promise<CspStats>;
-  exportCspFindings: (format?: "json" | "csv") => Promise<string>;
-  clearCspCache: () => Promise<void>;
-  processWorkflowCspAnalysis: (
-    requestData: { id: string; host: string; path: string },
-    responseData: { headers: Record<string, string[]> }
-  ) => Promise<CspAnalysisResult | null>;
-};
-
-// Use proper Caido SDK type
-export type FrontendSDK = API<BackendEndpoints, {}>;
+export interface FrontendSDK {
+  navigation: {
+    addPage: (path: string, options: { body: HTMLElement }) => void;
+  };
+  sidebar: {
+    registerItem: (title: string, path: string) => void;
+  };
+  backend: {
+    getCspStats: () => Promise<CspStats>;
+    getAllCspAnalyses: () => Promise<CspAnalysisResult[]>;
+    getScopeRespecting: () => Promise<boolean>;
+    getCreateFindings: () => Promise<boolean>;
+    setScopeRespecting: (value: boolean) => Promise<void>;
+    setCreateFindings: (value: boolean) => Promise<void>;
+    clearCspCache: () => Promise<void>;
+    exportCspFindings: (format: "json" | "csv") => Promise<string>;
+  };
+}
 
 export interface CspSource {
   value: string;
