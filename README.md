@@ -50,9 +50,6 @@ CSP Auditor is a Caido plugin that helps you monitor and analyze Content Securit
 ## TODO
 
 - [ ] Hook into [`csp-bypass.com`](https://csp-bypass.com) and also provide csp-auditor-like syntax highlighting and interface
-- [ ] Remove package hallucinations and neaten code for review
-- [ ] Include settings for aggressive, light scanning mode etc
-- [ ] Add popup dialogues for "recent CSP analyses" individual findings to provide context and details
 - [ ] Add images to docs and basic usage
 - [ ] Add more CSP directives support and toggle certain CSP directives
 

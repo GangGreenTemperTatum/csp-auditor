@@ -7,6 +7,7 @@ import InputSwitch from "primevue/inputswitch";
 import ProgressBar from "primevue/progressbar";
 import TabView from "primevue/tabview";
 import TabPanel from "primevue/tabpanel";
+import Tag from "primevue/tag";
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 
 import { useSDK } from "@/plugins/sdk";
@@ -72,6 +73,11 @@ const cspCheckSettings = ref({
 });
 
 const activeTab = ref(0);
+
+// Modal state for vulnerability details
+const showVulnerabilityModal = ref(false);
+const selectedVulnerability = ref<any>(null);
+const selectedAnalysisForModal = ref<CspAnalysisResult | null>(null);
 
 onMounted(async () => {
   await loadDashboardData();
@@ -400,6 +406,33 @@ const saveCspCheckSettings = async () => {
   }
 };
 
+// Modal functions
+const showVulnerabilityDetails = (vulnerability: any, analysis: CspAnalysisResult) => {
+  selectedVulnerability.value = vulnerability;
+  selectedAnalysisForModal.value = analysis;
+  showVulnerabilityModal.value = true;
+};
+
+const closeVulnerabilityModal = () => {
+  showVulnerabilityModal.value = false;
+  selectedVulnerability.value = null;
+  selectedAnalysisForModal.value = null;
+};
+
+const getSeverityColor = (severity: string) => {
+  switch (severity) {
+    case 'high': return 'danger';
+    case 'medium': return 'warning';
+    case 'low': return 'info';
+    case 'info': return 'secondary';
+    default: return 'secondary';
+  }
+};
+
+const formatCspDirective = (directive: string, values: string[]) => {
+  return `${directive} ${values.join(' ')};`;
+};
+
 const totalPages = computed(() => Math.ceil(allAnalyses.value.length / itemsPerPage.value));
 
 const paginatedAnalyses = computed(() => {
@@ -675,7 +708,9 @@ const nextPage = () => {
 
             <!-- Recent Analyses -->
             <Card>
-              <template #title>CSP Analyses ({{ allAnalyses.length }} total)</template>
+              <template #title>
+                <span>CSP Analyses ({{ allAnalyses.length }} total)</span>
+              </template>
               <template #content>
                 <!-- Table List View -->
                 <div v-if="allAnalyses.length > 0">
@@ -756,29 +791,22 @@ const nextPage = () => {
                       </td>
                       <td class="p-2" style="width: 120px;">
                         <div class="flex gap-1 flex-wrap">
+                          <template v-for="vulnerability in analysis.vulnerabilities.slice(0, 3)" :key="vulnerability.id">
+                            <Badge
+                              :value="vulnerability.type.split('-')[1] || vulnerability.type"
+                              :severity="getSeverityColor(vulnerability.severity)"
+                              class="text-xs cursor-pointer hover:bg-opacity-80 hover:scale-105 transition-all duration-200 border-2 border-transparent hover:border-current"
+                              :title="`Click to see details: ${vulnerability.type}\n${vulnerability.description}`"
+                              @click.stop="showVulnerabilityDetails(vulnerability, analysis)"
+                            />
+                          </template>
                           <Badge
-                            v-if="analysis.vulnerabilities.filter((v: any) => v.severity === 'high').length > 0"
-                            :value="analysis.vulnerabilities.filter((v: any) => v.severity === 'high').length"
-                            severity="danger"
-                            class="text-xs"
-                          />
-                          <Badge
-                            v-if="analysis.vulnerabilities.filter((v: any) => v.severity === 'medium').length > 0"
-                            :value="analysis.vulnerabilities.filter((v: any) => v.severity === 'medium').length"
-                            severity="warning"
-                            class="text-xs"
-                          />
-                          <Badge
-                            v-if="analysis.vulnerabilities.filter((v: any) => v.severity === 'low').length > 0"
-                            :value="analysis.vulnerabilities.filter((v: any) => v.severity === 'low').length"
-                            severity="info"
-                            class="text-xs"
-                          />
-                          <Badge
-                            v-if="analysis.vulnerabilities.filter((v: any) => v.severity === 'info').length > 0"
-                            :value="analysis.vulnerabilities.filter((v: any) => v.severity === 'info').length"
+                            v-if="analysis.vulnerabilities.length > 3"
+                            :value="`+${analysis.vulnerabilities.length - 3}`"
                             severity="secondary"
-                            class="text-xs"
+                            class="text-xs cursor-pointer hover:bg-opacity-80 transition-colors"
+                            title="Click to see all vulnerabilities"
+                            @click.stop="viewAnalysisDetails(analysis)"
                           />
                         </div>
                       </td>
@@ -1033,6 +1061,137 @@ const nextPage = () => {
           </div>
         </TabPanel>
       </TabView>
+    </div>
+
+    <!-- Vulnerability Details Modal Overlay -->
+    <div
+      v-if="showVulnerabilityModal"
+      class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50"
+      style="z-index: 9999;"
+      @click="closeVulnerabilityModal"
+    >
+      <div
+        class="bg-white dark:bg-gray-900 rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto"
+        @click.stop
+      >
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+          <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
+            🔍 {{ selectedVulnerability?.type.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Vulnerability Details' }}
+          </h2>
+          <Button
+            icon="pi pi-times"
+            severity="secondary"
+            text
+            rounded
+            @click="closeVulnerabilityModal"
+          />
+        </div>
+        
+        <!-- Modal Content -->
+        <div v-if="selectedVulnerability && selectedAnalysisForModal" class="p-6 space-y-6">
+        <!-- Vulnerability Overview -->
+        <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+          <div class="flex items-start justify-between mb-4">
+            <div class="flex-1">
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                {{ selectedVulnerability.type.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) }}
+              </h3>
+              <div class="flex items-center gap-3 mb-3">
+                <Tag 
+                  :value="selectedVulnerability.severity.toUpperCase()" 
+                  :severity="getSeverityColor(selectedVulnerability.severity)"
+                />
+                <span class="text-sm text-gray-600 dark:text-gray-400">
+                  Directive: <code class="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-xs">{{ selectedVulnerability.directive }}</code>
+                </span>
+                <span v-if="selectedVulnerability.cweId" class="text-sm text-gray-600 dark:text-gray-400">
+                  CWE-{{ selectedVulnerability.cweId }}
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="space-y-4">
+            <div>
+              <h4 class="font-medium text-gray-900 dark:text-white mb-2">Description</h4>
+              <p class="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
+                {{ selectedVulnerability.description }}
+              </p>
+            </div>
+            
+            <div>
+              <h4 class="font-medium text-gray-900 dark:text-white mb-2">Problematic Value</h4>
+              <code class="block bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200 p-3 rounded-md text-sm font-mono border border-red-200 dark:border-red-800">
+                {{ selectedVulnerability.value }}
+              </code>
+            </div>
+            
+            <div>
+              <h4 class="font-medium text-gray-900 dark:text-white mb-2">Remediation</h4>
+              <p class="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
+                {{ selectedVulnerability.remediation }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- CSP Policy Context -->
+        <div class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+          <h4 class="font-medium text-gray-900 dark:text-white mb-3">CSP Policy Context</h4>
+          <div class="space-y-3">
+            <div>
+              <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Request ID:</span>
+              <code class="ml-2 text-sm font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
+                {{ selectedAnalysisForModal.requestId }}
+              </code>
+            </div>
+            
+            <div>
+              <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Analysis Date:</span>
+              <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                {{ formatDate(selectedAnalysisForModal.analyzedAt) }}
+              </span>
+            </div>
+            
+            <div v-if="selectedAnalysisForModal.policies.length > 0">
+              <span class="text-sm font-medium text-gray-600 dark:text-gray-400 block mb-2">Complete CSP Policy:</span>
+              <div class="bg-gray-50 dark:bg-gray-800 rounded-md p-3 overflow-x-auto">
+                <div v-for="policy in selectedAnalysisForModal.policies" :key="policy.id" class="space-y-1">
+                  <div class="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                    Header: {{ policy.headerName }}{{ policy.isReportOnly ? ' (Report-Only)' : '' }}
+                  </div>
+                  <code class="block text-sm font-mono text-gray-800 dark:text-gray-200 whitespace-pre-wrap break-all">
+                    {{ policy.headerValue }}
+                  </code>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Additional Vulnerabilities in this Analysis -->
+        <div v-if="selectedAnalysisForModal.vulnerabilities.length > 1" class="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+          <h4 class="font-medium text-gray-900 dark:text-white mb-3">
+            Other Vulnerabilities in this Analysis ({{ selectedAnalysisForModal.vulnerabilities.length - 1 }} more)
+          </h4>
+          <div class="space-y-2">
+            <div 
+              v-for="vuln in selectedAnalysisForModal.vulnerabilities.filter(v => v.id !== selectedVulnerability.id)" 
+              :key="vuln.id"
+              class="flex items-center gap-3 p-2 bg-gray-50 dark:bg-gray-800 rounded cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              @click="selectedVulnerability = vuln"
+            >
+              <Tag :value="vuln.severity.toUpperCase()" :severity="getSeverityColor(vuln.severity)" class="text-xs" />
+              <span class="text-sm font-medium text-gray-900 dark:text-white">
+                {{ vuln.type.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) }}
+              </span>
+              <code class="text-xs bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">{{ vuln.directive }}</code>
+            </div>
+          </div>
+        </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
