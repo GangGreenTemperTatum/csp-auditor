@@ -1,9 +1,9 @@
 import type { DefineAPI, SDK } from "caido:plugin";
 
-import { CspParser } from './csp-parser';
-import { EnhancedCspAnalyzer } from './enhanced-analyzer';
+import { getBypassCount, getCSPBypassData } from "./bypass-database";
+import { CspParser } from "./csp-parser";
+import { EnhancedCspAnalyzer } from "./enhanced-analyzer";
 import type { CspAnalysisResult, CspPolicy, CspVulnerability } from "./types";
-import { getCSPBypassData, getBypassCount } from './bypass-database';
 
 const analysisCache = new Map<string, CspAnalysisResult>();
 let respectScope = true;
@@ -11,26 +11,26 @@ let createFindings = false;
 
 // Default CSP check settings - all enabled by default
 let cspCheckSettings: Record<string, boolean> = {
-  'script-wildcard': true,
-  'script-unsafe-inline': true,
-  'script-unsafe-eval': true,
-  'script-data-uri': true,
-  'object-wildcard': true,
-  'jsonp-bypass-risk': true,
-  'angularjs-bypass': true,
-  'ai-ml-host': true,
-  'web3-host': true,
-  'cdn-supply-chain': true,
-  'missing-trusted-types': true,
-  'missing-require-trusted-types': true,
-  'missing-essential-directive': true,
-  'permissive-base-uri': true,
-  'style-wildcard': true,
-  'style-unsafe-inline': true,
-  'deprecated-header': true,
-  'user-content-host': true,
-  'vulnerable-js-host': true,
-  'nonce-unsafe-inline-conflict': true,
+  "script-wildcard": true,
+  "script-unsafe-inline": true,
+  "script-unsafe-eval": true,
+  "script-data-uri": true,
+  "object-wildcard": true,
+  "jsonp-bypass-risk": true,
+  "angularjs-bypass": true,
+  "ai-ml-host": true,
+  "web3-host": true,
+  "cdn-supply-chain": true,
+  "missing-trusted-types": true,
+  "missing-require-trusted-types": true,
+  "missing-essential-directive": true,
+  "permissive-base-uri": true,
+  "style-wildcard": true,
+  "style-unsafe-inline": true,
+  "deprecated-header": true,
+  "user-content-host": true,
+  "vulnerable-js-host": true,
+  "nonce-unsafe-inline-conflict": true,
 };
 
 const analyzeCspHeaders = async (
@@ -46,7 +46,7 @@ const analyzeCspHeaders = async (
       requestId,
       policies: [],
       vulnerabilities: [],
-      analyzedAt: new Date()
+      analyzedAt: new Date(),
     };
   } catch (error) {
     sdk.console.error(
@@ -75,12 +75,32 @@ const getCspStats = async (sdk: SDK): Promise<Record<string, any>> => {
 
     const stats = {
       totalAnalyses: analyses.length,
-      totalVulnerabilities: analyses.reduce((sum, analysis) => sum + analysis.vulnerabilities.length, 0),
+      totalVulnerabilities: analyses.reduce(
+        (sum, analysis) => sum + analysis.vulnerabilities.length,
+        0,
+      ),
       severityStats: {
-        high: analyses.reduce((sum, a) => sum + a.vulnerabilities.filter(v => v.severity === 'high').length, 0),
-        medium: analyses.reduce((sum, a) => sum + a.vulnerabilities.filter(v => v.severity === 'medium').length, 0),
-        low: analyses.reduce((sum, a) => sum + a.vulnerabilities.filter(v => v.severity === 'low').length, 0),
-        info: analyses.reduce((sum, a) => sum + a.vulnerabilities.filter(v => v.severity === 'info').length, 0)
+        high: analyses.reduce(
+          (sum, a) =>
+            sum + a.vulnerabilities.filter((v) => v.severity === "high").length,
+          0,
+        ),
+        medium: analyses.reduce(
+          (sum, a) =>
+            sum +
+            a.vulnerabilities.filter((v) => v.severity === "medium").length,
+          0,
+        ),
+        low: analyses.reduce(
+          (sum, a) =>
+            sum + a.vulnerabilities.filter((v) => v.severity === "low").length,
+          0,
+        ),
+        info: analyses.reduce(
+          (sum, a) =>
+            sum + a.vulnerabilities.filter((v) => v.severity === "info").length,
+          0,
+        ),
       },
       typeStats: {},
       lastAnalyzed: analyses.length > 0 ? new Date() : null,
@@ -88,7 +108,8 @@ const getCspStats = async (sdk: SDK): Promise<Record<string, any>> => {
 
     for (const analysis of analyses) {
       for (const vuln of analysis.vulnerabilities) {
-        (stats.typeStats as any)[vuln.type] = ((stats.typeStats as any)[vuln.type] || 0) + 1;
+        (stats.typeStats as any)[vuln.type] =
+          ((stats.typeStats as any)[vuln.type] || 0) + 1;
       }
     }
 
@@ -155,7 +176,7 @@ const processWorkflowCspAnalysis = async (
   sdk: SDK,
   requestData: { id: string; host: string; path: string },
   responseData: { headers: Record<string, string[]> },
-  request?: any
+  request?: any,
 ): Promise<CspAnalysisResult | null> => {
   try {
     const requestId = requestData.id;
@@ -175,11 +196,14 @@ const processWorkflowCspAnalysis = async (
         headerData.name,
         headerData.value,
         requestId,
-        url
+        url,
       );
       policies.push(policy);
 
-      const vulnerabilities = EnhancedCspAnalyzer.analyzePolicy(policy, cspCheckSettings);
+      const vulnerabilities = EnhancedCspAnalyzer.analyzePolicy(
+        policy,
+        cspCheckSettings,
+      );
       allVulnerabilities.push(...vulnerabilities);
     }
 
@@ -187,71 +211,103 @@ const processWorkflowCspAnalysis = async (
       requestId,
       policies,
       vulnerabilities: allVulnerabilities,
-      analyzedAt: new Date()
+      analyzedAt: new Date(),
     };
 
     analysisCache.set(requestId, analysisResult);
 
-    sdk.console.log(`CSP Analysis complete: ${allVulnerabilities.length} vulnerabilities found, createFindings: ${createFindings}`);
+    sdk.console.log(
+      `CSP Analysis complete: ${allVulnerabilities.length} vulnerabilities found, createFindings: ${createFindings}`,
+    );
 
     if (createFindings && allVulnerabilities.length > 0 && request) {
       try {
-        const title = `CSP Vulnerabilities - ${policies.length} polic${policies.length === 1 ? 'y' : 'ies'} found`;
-        const description = `Found ${allVulnerabilities.length} CSP vulnerability/vulnerabilities across ${policies.length} polic${policies.length === 1 ? 'y' : 'ies'}:\n\n` +
-          allVulnerabilities.map(vuln => 
-            `• ${vuln.type} (${vuln.severity}): ${vuln.directive} - ${vuln.description}`
-          ).join('\n');
+        const title = `CSP Vulnerabilities - ${policies.length} polic${policies.length === 1 ? "y" : "ies"} found`;
+        const description =
+          `Found ${allVulnerabilities.length} CSP vulnerability/vulnerabilities across ${policies.length} polic${policies.length === 1 ? "y" : "ies"}:\n\n` +
+          allVulnerabilities
+            .map(
+              (vuln) =>
+                `• ${vuln.type} (${vuln.severity}): ${vuln.directive} - ${vuln.description}`,
+            )
+            .join("\n");
 
         await sdk.findings.create({
           title,
           description,
           reporter: "CSP Auditor",
           request,
-          dedupeKey: `csp-${requestData.host}-${requestData.path}`
+          dedupeKey: `csp-${requestData.host}-${requestData.path}`,
         });
 
-        sdk.console.log(`Created finding for CSP vulnerabilities in ${requestId}`);
+        sdk.console.log(
+          `Created finding for CSP vulnerabilities in ${requestId}`,
+        );
       } catch (error) {
-        sdk.console.error(`Failed to create finding: ${error instanceof Error ? error.message : String(error)}`);
+        sdk.console.error(
+          `Failed to create finding: ${error instanceof Error ? error.message : String(error)}`,
+        );
       }
     }
 
     return analysisResult;
   } catch (error) {
-    sdk.console.error(`CSP analysis failed: ${error instanceof Error ? error.message : String(error)}`);
+    sdk.console.error(
+      `CSP analysis failed: ${error instanceof Error ? error.message : String(error)}`,
+    );
     return null;
   }
 };
 
-
-const setScopeRespecting = async (sdk: SDK, respectScopeEnabled: boolean): Promise<void> => {
+const setScopeRespecting = async (
+  sdk: SDK,
+  respectScopeEnabled: boolean,
+): Promise<void> => {
   respectScope = respectScopeEnabled;
-  sdk.console.log(`CSP Auditor scope setting updated: ${respectScope ? 'respecting scope' : 'ignoring scope'}`);
+  sdk.console.log(
+    `CSP Auditor scope setting updated: ${respectScope ? "respecting scope" : "ignoring scope"}`,
+  );
 };
 
 const getScopeRespecting = async (sdk: SDK): Promise<boolean> => {
   return respectScope;
 };
 
-const setCreateFindings = async (sdk: SDK, createFindingsEnabled: boolean): Promise<void> => {
+const setCreateFindings = async (
+  sdk: SDK,
+  createFindingsEnabled: boolean,
+): Promise<void> => {
   createFindings = createFindingsEnabled;
-  sdk.console.log(`CSP Auditor findings creation updated: ${createFindings ? 'enabled' : 'disabled'} (value: ${createFindings})`);
+  sdk.console.log(
+    `CSP Auditor findings creation updated: ${createFindings ? "enabled" : "disabled"} (value: ${createFindings})`,
+  );
 };
 
 const getCreateFindings = async (sdk: SDK): Promise<boolean> => {
   return createFindings;
 };
 
-const getCspCheckSettings = async (sdk: SDK): Promise<Record<string, boolean>> => {
+const getCspCheckSettings = async (
+  sdk: SDK,
+): Promise<Record<string, boolean>> => {
   return cspCheckSettings;
 };
 
-const setCspCheckSettings = async (sdk: SDK, settings: Record<string, boolean>): Promise<void> => {
+const setCspCheckSettings = async (
+  sdk: SDK,
+  settings: Record<string, boolean>,
+): Promise<void> => {
   cspCheckSettings = { ...settings };
-  sdk.console.log(`CSP check settings updated: ${Object.keys(settings).length} checks configured`);
+  sdk.console.log(
+    `CSP check settings updated: ${Object.keys(settings).length} checks configured`,
+  );
 };
 
-const updateCspCheckSetting = async (sdk: SDK, checkId: string, enabled: boolean): Promise<void> => {
+const updateCspCheckSetting = async (
+  sdk: SDK,
+  checkId: string,
+  enabled: boolean,
+): Promise<void> => {
   cspCheckSettings[checkId] = enabled;
   sdk.console.log(`CSP check setting updated: ${checkId} = ${enabled}`);
 };
@@ -267,49 +323,54 @@ const getBypassDatabase = async (sdk: SDK): Promise<BypassEntry[]> => {
   try {
     const bypassCount = getBypassCount();
     sdk.console.log(`Loading CSP bypass database (${bypassCount} entries)`);
-    
+
     const tsvContent = getCSPBypassData();
     const entries = parseTSV(tsvContent);
-    sdk.console.log(`Successfully loaded ${entries.length} bypass entries from TSV data`);
+    sdk.console.log(
+      `Successfully loaded ${entries.length} bypass entries from TSV data`,
+    );
     return entries;
-    
   } catch (error) {
-    sdk.console.error(`Failed to load bypass database: ${error instanceof Error ? error.message : String(error)}`);
+    sdk.console.error(
+      `Failed to load bypass database: ${error instanceof Error ? error.message : String(error)}`,
+    );
     return [];
   }
 };
 
 const parseTSV = (tsvContent: string): BypassEntry[] => {
-  const lines = tsvContent.trim().split('\n');
+  const lines = tsvContent.trim().split("\n");
   const entries: BypassEntry[] = [];
-  
+
   // Skip header line
   for (let i = 1; i < lines.length; i++) {
-    const [domain, code] = lines[i].split('\t');
+    const line = lines[i];
+    if (!line) continue;
+    const [domain, code] = line.split("\t");
     if (domain && code) {
       entries.push({
         domain: domain.trim(),
         code: code.trim(),
         technique: detectTechnique(code.trim()),
-        id: `${domain.trim()}-${i}`
+        id: `${domain.trim()}-${i}`,
       });
     }
   }
-  
+
   return entries;
 };
 
 const detectTechnique = (code: string): string => {
-  if (code.includes('callback=') || code.includes('cb=')) return 'JSONP';
-  if (code.includes('ng-') || code.includes('angular')) return 'AngularJS';
-  if (code.includes('x-init') || code.includes('alpine')) return 'Alpine.js';
-  if (code.includes('hx-')) return 'HTMX';
-  if (code.includes('_="')) return 'Hyperscript';
-  if (code.includes('<script')) return 'Script Injection';
-  if (code.includes('<img') && code.includes('onerror')) return 'Event Handler';
-  if (code.includes('<link') && code.includes('onload')) return 'Link Preload';
-  if (code.includes('<iframe')) return 'Iframe Injection';
-  return 'XSS';
+  if (code.includes("callback=") || code.includes("cb=")) return "JSONP";
+  if (code.includes("ng-") || code.includes("angular")) return "AngularJS";
+  if (code.includes("x-init") || code.includes("alpine")) return "Alpine.js";
+  if (code.includes("hx-")) return "HTMX";
+  if (code.includes('_="')) return "Hyperscript";
+  if (code.includes("<script")) return "Script Injection";
+  if (code.includes("<img") && code.includes("onerror")) return "Event Handler";
+  if (code.includes("<link") && code.includes("onload")) return "Link Preload";
+  if (code.includes("<iframe")) return "Iframe Injection";
+  return "XSS";
 };
 
 export type API = DefineAPI<{
@@ -351,11 +412,14 @@ export function init(sdk: SDK<API>) {
     sdk.events.onInterceptResponse(async (sdk, request, response) => {
       try {
         const responseHeaders = response.getHeaders();
-        const headerNames = Object.keys(responseHeaders).map(h => h.toLowerCase());
-        const cspHeaderNames = headerNames.filter(h =>
-          h.includes('content-security-policy') ||
-          h.includes('x-content-security-policy') ||
-          h.includes('x-webkit-csp')
+        const headerNames = Object.keys(responseHeaders).map((h) =>
+          h.toLowerCase(),
+        );
+        const cspHeaderNames = headerNames.filter(
+          (h) =>
+            h.includes("content-security-policy") ||
+            h.includes("x-content-security-policy") ||
+            h.includes("x-webkit-csp"),
         );
 
         if (cspHeaderNames.length > 0) {
@@ -369,14 +433,19 @@ export function init(sdk: SDK<API>) {
           const requestData = {
             id: request.getId(),
             host: request.getHost(),
-            path: request.getPath()
+            path: request.getPath(),
           };
 
           const responseData = {
-            headers: responseHeaders
+            headers: responseHeaders,
           };
 
-          await processWorkflowCspAnalysis(sdk, requestData, responseData, request);
+          await processWorkflowCspAnalysis(
+            sdk,
+            requestData,
+            responseData,
+            request,
+          );
         }
       } catch (error) {
         sdk.console.error(`Error processing response: ${error}`);

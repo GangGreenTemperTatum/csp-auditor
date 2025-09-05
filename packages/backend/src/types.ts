@@ -35,7 +35,7 @@ export type VulnerabilityType =
   | "vulnerable-js-host"
   | "deprecated-header"
   | "wildcard-limited"
-  
+
   // Enhanced modern vulnerabilities
   | "script-data-uri"
   | "object-wildcard"
@@ -46,14 +46,14 @@ export type VulnerabilityType =
   | "missing-essential-directive"
   | "permissive-base-uri"
   | "nonce-unsafe-inline-conflict"
-  
+
   // Modern threat categories
   | "ai-ml-host"
   | "web3-host"
   | "cdn-supply-chain"
   | "supply-chain-risk"
   | "privacy-tracking-risk"
-  | "gaming-metaverse-risk"
+  | "gaming-metaverse-risk";
 
 export type Severity = "high" | "medium" | "low" | "info";
 
