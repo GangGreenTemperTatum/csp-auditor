@@ -4,6 +4,8 @@
 
 _A comprehensive Content Security Policy (CSP) vulnerability scanner plugin for Caido, designed to automatically detect and analyze CSP headers for common security misconfigurations and vulnerabilities with easily available applicable gadgets._
 
+Brought to you by [@GangGreenTemperTatum](https://github.com/GangGreenTemperTatum), proud ambassador of the [Caido](https://caido.io/ambassadors) community!
+
 _Hack the planet 🤘_
 
 [![GitHub forks](https://img.shields.io/github/forks/GangGreenTemperTatum/csp-auditor?style=social)](https://github.com/GangGreenTemperTatum/csp-auditor/network/members)
@@ -36,16 +38,22 @@ _Hack the planet 🤘_
     - [Installation](#installation)
     - [Install from source (without auto-updates):](#install-from-source-without-auto-updates)
     - [Usage](#usage)
+      - [Dashboard \& Analysis](#dashboard--analysis)
+      - [Vulnerability Detection](#vulnerability-detection)
+      - [Bypass Database](#bypass-database)
+      - [Configuration](#configuration)
   - [Contributing](#contributing)
     - [Adding New Bypass Gadgets](#adding-new-bypass-gadgets)
     - [General Development](#general-development)
   - [License](#license)
   - [Star History](#star-history)
 
-
 ## Overview
 
 CSP Auditor is a Caido plugin that helps you monitor and analyze Content Security Policies (CSP) in web applications, it is designed to mimic the [Burp Suite extension](https://github.com/portswigger/csp-auditor)'s functionality with additional improvements and integration with [`cspbypass.com`](https://cspbypass.com) for a built-in bypass database of real-world CSP bypass techniques, directly in Caido!
+
+![csp-auditor main panel](./assets/public/csp-auditor-main-panel.png)
+<div align="center"><i>csp-auditor main panel</i></div>
 
 ## Features
 
@@ -83,7 +91,7 @@ CSP Auditor is a Caido plugin that helps you monitor and analyze Content Securit
 
 ### Prerequisites
 
-- Caido (latest version)
+- [Caido](https://caido.io) (latest version)
 - Node.js and pnpm (for development)
 
 ### Installation
@@ -126,13 +134,45 @@ CSP Auditor is a Caido plugin that helps you monitor and analyze Content Securit
 
 ### Usage
 
-TODO once v1.0 features are built out
+CSP Auditor automatically monitors your HTTP traffic and analyzes CSP headers in real-time. Once installed, it works seamlessly in the background.
 
-<!--![csp-auditor Notification](./public/images/csp-auditor-popup-alert-1.png)
-*csp-auditor notification*-->
+#### Dashboard & Analysis
+- **View CSP Statistics**: Navigate to the CSP Auditor panel to see vulnerability counts by severity (high/medium/low/info)
+- **Analyze Individual Responses**: Click on any analyzed response to view detailed CSP policy breakdown and specific vulnerabilities
+- **Export Reports**: Export findings as JSON or CSV for documentation and reporting
 
-<!--![csp-auditor Notification](./public/images/csp-auditor-popup-alert-2.png)-->
-<!--*csp-auditor notification*-->
+![csp-auditor analysis clickable](./assets/public/csp-auditor-analysis-clickable.png)
+<div align="center"><i>csp-auditor analysis clickable</i></div>
+
+![csp-auditor analysis modal](./assets/public/csp-auditor-modal-1.png)
+<div align="center"><i>csp-auditor analysis modal</i></div>
+
+![csp-auditor analysis modal](./assets/public/csp-auditor-modal-2.png)
+<div align="center"><i>csp-auditor analysis modal</i></div>
+
+#### Vulnerability Detection
+- **Real-time Alerts**: Automatic detection of 34+ CSP misconfigurations as you browse
+- **Caido Findings**: Enable auto-creation of findings for detected vulnerabilities (toggle in settings)
+- **Severity Classification**: Vulnerabilities categorized by impact level with detailed descriptions
+
+![csp-auditor vulnerability finding](./assets/public/csp-auditor-finding.png)
+<div align="center"><i>csp-auditor finding</i></div>
+
+#### Bypass Database
+- **209+ Real-world Bypasses**: Searchable database of CSP bypass techniques from security research
+- **Copy Payloads**: One-click copying of bypass code for testing
+- **Contextual Examples**: Relevant bypasses shown in vulnerability modals for immediate testing
+
+![csp-auditor bypass gadget db](./assets/public/csp-auditor-bypass-gadget-db.png)
+<div align="center"><i>csp-auditor bypass gadget db</i></div>
+
+#### Configuration
+- **Scope Awareness**: Respects Caido's project scope settings for targeted analysis
+- **Customizable Checks**: Enable/disable specific vulnerability types via settings panel
+- **Cache Management**: Clear analysis cache when needed
+
+![csp-audit settings](./assets/public/csp-audit-settings.png)
+<div align="center"><i>csp-audit settings</i></div>
 
 ---
 
