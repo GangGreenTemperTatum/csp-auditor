@@ -7,24 +7,31 @@ import { generateId } from "./utils";
  */
 export class EnhancedCspAnalyzer {
 
-  static analyzePolicy(policy: CspPolicy): CspVulnerability[] {
+  static analyzePolicy(policy: CspPolicy, settings?: Record<string, boolean>): CspVulnerability[] {
     const vulnerabilities: CspVulnerability[] = [];
 
-    // Modern comprehensive analysis
-    vulnerabilities.push(...this.analyzeDeprecatedFeatures(policy));
-    vulnerabilities.push(...this.analyzeCriticalVulnerabilities(policy));
-    vulnerabilities.push(...this.analyzeBypassTechniques(policy));
-    vulnerabilities.push(...this.analyzeModernThreats(policy));
-    vulnerabilities.push(...this.analyzePolicyWeaknesses(policy));
-    vulnerabilities.push(...this.analyzeLevel3Features(policy));
+    // Modern comprehensive analysis - only run if settings allow
+    vulnerabilities.push(...this.analyzeDeprecatedFeatures(policy, settings));
+    vulnerabilities.push(...this.analyzeCriticalVulnerabilities(policy, settings));
+    vulnerabilities.push(...this.analyzeBypassTechniques(policy, settings));
+    vulnerabilities.push(...this.analyzeModernThreats(policy, settings));
+    vulnerabilities.push(...this.analyzePolicyWeaknesses(policy, settings));
+    vulnerabilities.push(...this.analyzeLevel3Features(policy, settings));
 
     return this.prioritizeAndDeduplicate(vulnerabilities);
   }
 
   /**
+   * Helper method to check if a vulnerability type is enabled
+   */
+  private static isCheckEnabled(type: string, settings?: Record<string, boolean>): boolean {
+    return settings ? (settings[type] ?? true) : true;
+  }
+
+  /**
    * Critical security vulnerabilities (HIGH severity)
    */
-  private static analyzeCriticalVulnerabilities(policy: CspPolicy): CspVulnerability[] {
+  private static analyzeCriticalVulnerabilities(policy: CspPolicy, settings?: Record<string, boolean>): CspVulnerability[] {
     const vulnerabilities: CspVulnerability[] = [];
 
     for (const [, directive] of policy.directives) {
@@ -32,7 +39,7 @@ export class EnhancedCspAnalyzer {
       if (this.isScriptExecutionDirective(directive.name)) {
         for (const value of directive.values) {
           // Wildcard script sources - CRITICAL
-          if (value === "*") {
+          if (value === "*" && this.isCheckEnabled('script-wildcard', settings)) {
             vulnerabilities.push(this.createVulnerability({
               type: "script-wildcard",
               severity: "high",
@@ -47,7 +54,7 @@ export class EnhancedCspAnalyzer {
           }
 
           // Unsafe inline - CRITICAL
-          if (value === "'unsafe-inline'") {
+          if (value === "'unsafe-inline'" && this.isCheckEnabled('script-unsafe-inline', settings)) {
             vulnerabilities.push(this.createVulnerability({
               type: "script-unsafe-inline",
               severity: "high",
@@ -62,7 +69,7 @@ export class EnhancedCspAnalyzer {
           }
 
           // Unsafe eval - CRITICAL
-          if (value === "'unsafe-eval'") {
+          if (value === "'unsafe-eval'" && this.isCheckEnabled('script-unsafe-eval', settings)) {
             vulnerabilities.push(this.createVulnerability({
               type: "script-unsafe-eval",
               severity: "high",
@@ -119,7 +126,7 @@ export class EnhancedCspAnalyzer {
   /**
    * Modern bypass techniques and advanced threats
    */
-  private static analyzeBypassTechniques(policy: CspPolicy): CspVulnerability[] {
+  private static analyzeBypassTechniques(policy: CspPolicy, settings?: Record<string, boolean>): CspVulnerability[] {
     const vulnerabilities: CspVulnerability[] = [];
 
     // JSONP callback bypasses
@@ -143,7 +150,7 @@ export class EnhancedCspAnalyzer {
   /**
    * CSP Level 3 modern features analysis
    */
-  private static analyzeLevel3Features(policy: CspPolicy): CspVulnerability[] {
+  private static analyzeLevel3Features(policy: CspPolicy, settings?: Record<string, boolean>): CspVulnerability[] {
     const vulnerabilities: CspVulnerability[] = [];
 
     // Check for missing modern security features
@@ -182,7 +189,7 @@ export class EnhancedCspAnalyzer {
   /**
    * Enhanced policy weakness detection
    */
-  private static analyzePolicyWeaknesses(policy: CspPolicy): CspVulnerability[] {
+  private static analyzePolicyWeaknesses(policy: CspPolicy, settings?: Record<string, boolean>): CspVulnerability[] {
     const vulnerabilities: CspVulnerability[] = [];
 
     // Missing essential directives
@@ -223,7 +230,7 @@ export class EnhancedCspAnalyzer {
   /**
    * Modern threat landscape analysis
    */
-  private static analyzeModernThreats(policy: CspPolicy): CspVulnerability[] {
+  private static analyzeModernThreats(policy: CspPolicy, settings?: Record<string, boolean>): CspVulnerability[] {
     const vulnerabilities: CspVulnerability[] = [];
 
     // AI/ML service endpoints that could be exploited
@@ -407,7 +414,7 @@ export class EnhancedCspAnalyzer {
     // WebAssembly security analysis
   }
 
-  private static analyzeDeprecatedFeatures(policy: CspPolicy): CspVulnerability[] {
+  private static analyzeDeprecatedFeatures(policy: CspPolicy, settings?: Record<string, boolean>): CspVulnerability[] {
     const vulnerabilities: CspVulnerability[] = [];
 
     // Enhanced deprecated feature detection

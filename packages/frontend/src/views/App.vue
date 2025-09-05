@@ -5,7 +5,9 @@ import Card from "primevue/card";
 import Divider from "primevue/divider";
 import InputSwitch from "primevue/inputswitch";
 import ProgressBar from "primevue/progressbar";
-import { computed, onMounted, onUnmounted, ref } from "vue";
+import TabView from "primevue/tabview";
+import TabPanel from "primevue/tabpanel";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 
 import { useSDK } from "@/plugins/sdk";
 import type { CspAnalysisResult, CspStats } from "@/types";
@@ -34,16 +36,59 @@ const REFRESH_INTERVAL_MS = 5000;
 const respectScope = ref(true);
 const createFindings = ref(false);
 
+// Settings for CSP checks
+const cspCheckSettings = ref({
+  // Critical vulnerabilities
+  'script-wildcard': { enabled: true, name: 'Script Wildcard Sources', category: 'Critical', severity: 'high', description: 'Detect wildcard (*) in script-src directive' },
+  'script-unsafe-inline': { enabled: true, name: 'Unsafe Inline Scripts', category: 'Critical', severity: 'high', description: 'Detect unsafe-inline in script-src directive' },
+  'script-unsafe-eval': { enabled: true, name: 'Unsafe Eval', category: 'Critical', severity: 'high', description: 'Detect unsafe-eval in script-src directive' },
+  'script-data-uri': { enabled: true, name: 'Data URI Scripts', category: 'Critical', severity: 'high', description: 'Detect data: URIs in script-src directive' },
+  'object-wildcard': { enabled: true, name: 'Object Wildcard Sources', category: 'Critical', severity: 'high', description: 'Detect wildcard (*) in object-src directive' },
+  
+  // Modern threats
+  'jsonp-bypass-risk': { enabled: true, name: 'JSONP Bypass Risk', category: 'Modern Threats', severity: 'high', description: 'Detect domains that support JSONP callbacks' },
+  'angularjs-bypass': { enabled: true, name: 'AngularJS Template Injection', category: 'Modern Threats', severity: 'high', description: 'Detect AngularJS template injection risks' },
+  'ai-ml-host': { enabled: true, name: 'AI/ML Service Integration', category: 'Modern Threats', severity: 'medium', description: 'Detect AI/ML service endpoints' },
+  'web3-host': { enabled: true, name: 'Web3/Crypto Integration', category: 'Modern Threats', severity: 'medium', description: 'Detect Web3/cryptocurrency endpoints' },
+  'cdn-supply-chain': { enabled: true, name: 'CDN Supply Chain Risk', category: 'Modern Threats', severity: 'medium', description: 'Detect CDN endpoints with supply chain risks' },
+  
+  // Missing features
+  'missing-trusted-types': { enabled: true, name: 'Missing Trusted Types', category: 'Missing Features', severity: 'medium', description: 'Check for missing trusted-types directive' },
+  'missing-require-trusted-types': { enabled: true, name: 'Missing Require Trusted Types', category: 'Missing Features', severity: 'medium', description: 'Check for missing require-trusted-types-for directive' },
+  'missing-essential-directive': { enabled: true, name: 'Missing Essential Directives', category: 'Missing Features', severity: 'medium', description: 'Check for missing essential CSP directives' },
+  'permissive-base-uri': { enabled: true, name: 'Permissive Base URI', category: 'Policy Weaknesses', severity: 'medium', description: 'Check for overly permissive base-uri directive' },
+  
+  // Style-related
+  'style-wildcard': { enabled: true, name: 'Style Wildcard Sources', category: 'Style Issues', severity: 'low', description: 'Detect wildcard (*) in style-src directive' },
+  'style-unsafe-inline': { enabled: true, name: 'Unsafe Inline Styles', category: 'Style Issues', severity: 'medium', description: 'Detect unsafe-inline in style-src directive' },
+  
+  // Legacy/deprecated
+  'deprecated-header': { enabled: true, name: 'Deprecated CSP Headers', category: 'Legacy Issues', severity: 'medium', description: 'Detect deprecated CSP header names' },
+  'user-content-host': { enabled: true, name: 'User Content Hosts', category: 'Legacy Issues', severity: 'high', description: 'Detect domains that host user-uploaded content' },
+  'vulnerable-js-host': { enabled: true, name: 'Vulnerable JS Library Hosts', category: 'Legacy Issues', severity: 'high', description: 'Detect domains with vulnerable JavaScript libraries' },
+  
+  // Advanced
+  'nonce-unsafe-inline-conflict': { enabled: true, name: 'Nonce/Unsafe-Inline Conflict', category: 'Advanced', severity: 'medium', description: 'Detect nonce security weakened by unsafe-inline' },
+});
+
+const activeTab = ref(0);
+
 onMounted(async () => {
   await loadDashboardData();
   await loadScopeSettings();
   await loadCreateFindingsSettings();
+  await loadCspCheckSettings();
   startAutoRefresh();
 });
 
 onUnmounted(() => {
   stopAutoRefresh();
 });
+
+// Watch for individual setting changes and save to backend
+watch(cspCheckSettings, () => {
+  saveCspCheckSettings();
+}, { deep: true });
 
 const calculateStatsFromAnalyses = (analyses: CspAnalysisResult[]) => {
   const allVulnerabilities = analyses.flatMap(analysis => analysis.vulnerabilities);
@@ -249,10 +294,6 @@ const extractHostAndPath = (analysis: CspAnalysisResult) => {
   };
 };
 
-const truncatePath = (path: string, maxLength: number = 25) => {
-  if (path.length <= maxLength) return path;
-  return path.substring(0, maxLength) + '...';
-};
 
 const getSeverityPercentage = computed(() => {
   const total = stats.value.totalVulnerabilities;
@@ -265,6 +306,99 @@ const getSeverityPercentage = computed(() => {
     info: (stats.value.severityStats.info / total) * 100,
   };
 });
+
+// Convert settings object to array for table display
+const cspChecksArray = computed(() => {
+  return Object.entries(cspCheckSettings.value).map(([key, check]) => ({
+    id: key,
+    ...check
+  }));
+});
+
+// Group checks by category
+const checksByCategory = computed(() => {
+  const grouped: Record<string, any[]> = {};
+  cspChecksArray.value.forEach(check => {
+    if (!grouped[check.category]) {
+      grouped[check.category] = [];
+    }
+    grouped[check.category]?.push(check);
+  });
+  return grouped;
+});
+
+const enabledChecksCount = computed(() => {
+  return Object.values(cspCheckSettings.value).filter(check => check.enabled).length;
+});
+
+const totalChecksCount = computed(() => {
+  return Object.keys(cspCheckSettings.value).length;
+});
+
+// Quick preset functions
+const enableAllChecks = () => {
+  Object.keys(cspCheckSettings.value).forEach(key => {
+    cspCheckSettings.value[key as keyof typeof cspCheckSettings.value].enabled = true;
+  });
+  saveCspCheckSettings();
+};
+
+const disableAllChecks = () => {
+  Object.keys(cspCheckSettings.value).forEach(key => {
+    cspCheckSettings.value[key as keyof typeof cspCheckSettings.value].enabled = false;
+  });
+  saveCspCheckSettings();
+};
+
+const setAggressiveMode = () => {
+  enableAllChecks();
+};
+
+const setLightMode = () => {
+  // Enable only critical checks
+  Object.entries(cspCheckSettings.value).forEach(([key, check]) => {
+    cspCheckSettings.value[key as keyof typeof cspCheckSettings.value].enabled = 
+      check.severity === 'high' || check.category === 'Critical';
+  });
+  saveCspCheckSettings();
+};
+
+const setRecommendedMode = () => {
+  // Enable high and medium severity checks
+  Object.entries(cspCheckSettings.value).forEach(([key, check]) => {
+    cspCheckSettings.value[key as keyof typeof cspCheckSettings.value].enabled = 
+      check.severity === 'high' || check.severity === 'medium';
+  });
+  saveCspCheckSettings();
+};
+
+const loadCspCheckSettings = async () => {
+  try {
+    const backendSettings = await sdk.backend.getCspCheckSettings();
+    
+    // Update our frontend settings with backend state
+    Object.keys(cspCheckSettings.value).forEach(key => {
+      if (backendSettings[key] !== undefined) {
+        cspCheckSettings.value[key as keyof typeof cspCheckSettings.value].enabled = backendSettings[key];
+      }
+    });
+  } catch (error) {
+    console.error("Failed to load CSP check settings:", error);
+  }
+};
+
+const saveCspCheckSettings = async () => {
+  try {
+    const settingsToSave: Record<string, boolean> = {};
+    Object.entries(cspCheckSettings.value).forEach(([key, check]) => {
+      settingsToSave[key] = check.enabled;
+    });
+    
+    await sdk.backend.setCspCheckSettings(settingsToSave);
+  } catch (error) {
+    console.error("Failed to save CSP check settings:", error);
+  }
+};
 
 const totalPages = computed(() => Math.ceil(allAnalyses.value.length / itemsPerPage.value));
 
@@ -395,158 +529,162 @@ const nextPage = () => {
 
     <!-- Main Content -->
     <div v-else class="space-y-6">
-      <!-- Stats Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <template #content>
-            <div class="text-center">
-              <div class="text-2xl font-bold text-blue-600">
-                {{ stats.totalAnalyses }}
-              </div>
-              <div class="text-sm text-gray-600 dark:text-gray-300">
-                Total Analyses
-              </div>
+      <TabView v-model:activeIndex="activeTab" class="w-full">
+        <!-- Dashboard Tab -->
+        <TabPanel header="Dashboard">
+          <div class="space-y-6">
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <Card>
+                <template #content>
+                  <div class="text-center">
+                    <div class="text-2xl font-bold text-blue-600">
+                      {{ stats.totalAnalyses }}
+                    </div>
+                    <div class="text-sm text-gray-600 dark:text-gray-300">
+                      Total Analyses
+                    </div>
+                  </div>
+                </template>
+              </Card>
+
+              <Card>
+                <template #content>
+                  <div class="text-center">
+                    <div class="text-2xl font-bold text-red-600">
+                      {{ stats.totalVulnerabilities }}
+                    </div>
+                    <div class="text-sm text-gray-600 dark:text-gray-300">
+                      Total Vulnerabilities
+                    </div>
+                  </div>
+                </template>
+              </Card>
+
+              <Card>
+                <template #content>
+                  <div class="text-center">
+                    <div class="text-2xl font-bold text-red-500">
+                      {{ stats.severityStats.high }}
+                    </div>
+                    <div class="text-sm text-gray-600 dark:text-gray-300">
+                      High Severity
+                    </div>
+                  </div>
+                </template>
+              </Card>
+
+              <Card>
+                <template #content>
+                  <div class="text-center">
+                    <div class="text-2xl font-bold text-orange-500">
+                      {{ stats.severityStats.medium }}
+                    </div>
+                    <div class="text-sm text-gray-600 dark:text-gray-300">
+                      Medium Severity
+                    </div>
+                  </div>
+                </template>
+              </Card>
             </div>
-          </template>
-        </Card>
 
-        <Card>
-          <template #content>
-            <div class="text-center">
-              <div class="text-2xl font-bold text-red-600">
-                {{ stats.totalVulnerabilities }}
-              </div>
-              <div class="text-sm text-gray-600 dark:text-gray-300">
-                Total Vulnerabilities
-              </div>
+            <!-- Severity Breakdown and Future Feature Panel -->
+            <div class="grid grid-cols-2 gap-6">
+              <!-- Left: Severity Breakdown -->
+              <Card>
+                <template #title>Vulnerability Severity Breakdown</template>
+                <template #content>
+                  <div v-if="stats.totalVulnerabilities > 0" class="space-y-4">
+                    <div class="flex justify-between items-center">
+                      <span class="font-medium">High ({{ getSeverityPercentage.high.toFixed(1) }}%)</span>
+                      <Badge
+                        :value="stats.severityStats.high"
+                        :class="getSeverityBadgeClass('high')"
+                      />
+                    </div>
+                    <ProgressBar
+                      :value="getSeverityPercentage.high"
+                      class="h-2"
+                      :style="{ backgroundColor: '#ef4444' }"
+                      :showValue="false"
+                    />
+
+                    <div class="flex justify-between items-center">
+                      <span class="font-medium">Medium ({{ getSeverityPercentage.medium.toFixed(1) }}%)</span>
+                      <Badge
+                        :value="stats.severityStats.medium"
+                        :class="getSeverityBadgeClass('medium')"
+                      />
+                    </div>
+                    <ProgressBar
+                      :value="getSeverityPercentage.medium"
+                      class="h-2"
+                      :style="{ backgroundColor: '#f97316' }"
+                      :showValue="false"
+                    />
+
+                    <div class="flex justify-between items-center">
+                      <span class="font-medium">Low ({{ getSeverityPercentage.low.toFixed(1) }}%)</span>
+                      <Badge
+                        :value="stats.severityStats.low"
+                        :class="getSeverityBadgeClass('low')"
+                      />
+                    </div>
+                    <ProgressBar
+                      :value="getSeverityPercentage.low"
+                      class="h-2"
+                      :style="{ backgroundColor: '#eab308' }"
+                      :showValue="false"
+                    />
+
+                    <div class="flex justify-between items-center">
+                      <span class="font-medium">Info ({{ getSeverityPercentage.info.toFixed(1) }}%)</span>
+                      <Badge
+                        :value="stats.severityStats.info"
+                        :class="getSeverityBadgeClass('info')"
+                      />
+                    </div>
+                    <ProgressBar
+                      :value="getSeverityPercentage.info"
+                      class="h-2"
+                      :style="{ backgroundColor: '#3b82f6' }"
+                      :showValue="false"
+                    />
+                  </div>
+                  <div v-else class="text-center text-gray-500 py-8">
+                    No vulnerabilities found yet. Start analyzing requests with CSP
+                    headers.
+                  </div>
+                </template>
+              </Card>
+
+              <!-- Right: Reserved for Future Feature -->
+              <Card>
+                <template #title>Policy Recommendations</template>
+                <template #content>
+                  <div class="text-center text-gray-500 py-16">
+                    <i class="pi pi-wrench text-4xl mb-4 block"></i>
+                    <div class="text-lg font-medium mb-2">Coming Soon</div>
+                    <div class="text-sm">
+                      Advanced CSP policy generation and recommendations will be available here
+                    </div>
+                  </div>
+                </template>
+              </Card>
             </div>
-          </template>
-        </Card>
 
-        <Card>
-          <template #content>
-            <div class="text-center">
-              <div class="text-2xl font-bold text-red-500">
-                {{ stats.severityStats.high }}
-              </div>
-              <div class="text-sm text-gray-600 dark:text-gray-300">
-                High Severity
-              </div>
-            </div>
-          </template>
-        </Card>
-
-        <Card>
-          <template #content>
-            <div class="text-center">
-              <div class="text-2xl font-bold text-orange-500">
-                {{ stats.severityStats.medium }}
-              </div>
-              <div class="text-sm text-gray-600 dark:text-gray-300">
-                Medium Severity
-              </div>
-            </div>
-          </template>
-        </Card>
-      </div>
-
-      <!-- Severity Breakdown and Future Feature Panel -->
-      <div class="grid grid-cols-2 gap-6">
-        <!-- Left: Severity Breakdown -->
-        <Card>
-          <template #title>Vulnerability Severity Breakdown</template>
-          <template #content>
-            <div v-if="stats.totalVulnerabilities > 0" class="space-y-4">
-              <div class="flex justify-between items-center">
-                <span class="font-medium">High ({{ getSeverityPercentage.high.toFixed(1) }}%)</span>
-                <Badge
-                  :value="stats.severityStats.high"
-                  :class="getSeverityBadgeClass('high')"
-                />
-              </div>
-              <ProgressBar
-                :value="getSeverityPercentage.high"
-                class="h-2"
-                :style="{ backgroundColor: '#ef4444' }"
-                :showValue="false"
-              />
-
-              <div class="flex justify-between items-center">
-                <span class="font-medium">Medium ({{ getSeverityPercentage.medium.toFixed(1) }}%)</span>
-                <Badge
-                  :value="stats.severityStats.medium"
-                  :class="getSeverityBadgeClass('medium')"
-                />
-              </div>
-              <ProgressBar
-                :value="getSeverityPercentage.medium"
-                class="h-2"
-                :style="{ backgroundColor: '#f97316' }"
-                :showValue="false"
-              />
-
-              <div class="flex justify-between items-center">
-                <span class="font-medium">Low ({{ getSeverityPercentage.low.toFixed(1) }}%)</span>
-                <Badge
-                  :value="stats.severityStats.low"
-                  :class="getSeverityBadgeClass('low')"
-                />
-              </div>
-              <ProgressBar
-                :value="getSeverityPercentage.low"
-                class="h-2"
-                :style="{ backgroundColor: '#eab308' }"
-                :showValue="false"
-              />
-
-              <div class="flex justify-between items-center">
-                <span class="font-medium">Info ({{ getSeverityPercentage.info.toFixed(1) }}%)</span>
-                <Badge
-                  :value="stats.severityStats.info"
-                  :class="getSeverityBadgeClass('info')"
-                />
-              </div>
-              <ProgressBar
-                :value="getSeverityPercentage.info"
-                class="h-2"
-                :style="{ backgroundColor: '#3b82f6' }"
-                :showValue="false"
-              />
-            </div>
-            <div v-else class="text-center text-gray-500 py-8">
-              No vulnerabilities found yet. Start analyzing requests with CSP
-              headers.
-            </div>
-          </template>
-        </Card>
-
-        <!-- Right: Reserved for Future Feature -->
-        <Card>
-          <template #title>Policy Recommendations</template>
-          <template #content>
-            <div class="text-center text-gray-500 py-16">
-              <i class="pi pi-wrench text-4xl mb-4 block"></i>
-              <div class="text-lg font-medium mb-2">Coming Soon</div>
-              <div class="text-sm">
-                Advanced CSP policy generation and recommendations will be available here
-              </div>
-            </div>
-          </template>
-        </Card>
-      </div>
-
-      <!-- Recent Analyses -->
-      <Card>
-        <template #title>CSP Analyses ({{ allAnalyses.length }} total)</template>
-        <template #content>
-          <!-- Table List View -->
-          <div v-if="allAnalyses.length > 0">
-            <!-- Pagination Controls -->
-            <div class="flex justify-between items-center mb-4">
-              <div class="text-sm text-gray-600 dark:text-gray-400">
-                Page {{ currentPage }} of {{ totalPages }} (showing {{ paginatedAnalyses.length }} of {{ allAnalyses.length }} analyses)
-              </div>
-              <div class="flex items-center gap-2">
+            <!-- Recent Analyses -->
+            <Card>
+              <template #title>CSP Analyses ({{ allAnalyses.length }} total)</template>
+              <template #content>
+                <!-- Table List View -->
+                <div v-if="allAnalyses.length > 0">
+                  <!-- Pagination Controls -->
+                  <div class="flex justify-between items-center mb-4">
+                    <div class="text-sm text-gray-600 dark:text-gray-400">
+                      Page {{ currentPage }} of {{ totalPages }} (showing {{ paginatedAnalyses.length }} of {{ allAnalyses.length }} analyses)
+                    </div>
+                    <div class="flex items-center gap-2">
                 <Button
                   icon="pi pi-angle-left"
                   size="small"
@@ -580,14 +718,14 @@ const nextPage = () => {
             </div>
             
             <div class="overflow-x-auto">
-              <table class="w-full border-collapse">
+              <table class="w-full border-collapse table-fixed">
                 <thead>
                   <tr class="border-b border-gray-200 dark:border-gray-700">
-                    <th class="text-left p-3 font-medium text-gray-700 dark:text-gray-300" style="width: 120px;">Request ID</th>
-                    <th class="text-left p-3 font-medium text-gray-700 dark:text-gray-300" style="width: 150px;">Timestamp</th>
-                    <th class="text-left p-3 font-medium text-gray-700 dark:text-gray-300" style="min-width: 600px;">Host / Path</th>
-                    <th class="text-left p-3 font-medium text-gray-700 dark:text-gray-300" style="min-width: 140px;">Vulnerabilities</th>
-                    <th class="text-left p-3 font-medium text-gray-700 dark:text-gray-300" style="width: 80px;">Policies</th>
+                    <th class="text-left p-2 font-medium text-gray-700 dark:text-gray-300" style="width: 100px;">Request ID</th>
+                    <th class="text-left p-2 font-medium text-gray-700 dark:text-gray-300" style="width: 130px;">Timestamp</th>
+                    <th class="text-left p-2 font-medium text-gray-700 dark:text-gray-300" style="max-width: 300px; min-width: 200px;">Host / Path</th>
+                    <th class="text-left p-2 font-medium text-gray-700 dark:text-gray-300" style="width: 120px;">Vulnerabilities</th>
+                    <th class="text-left p-2 font-medium text-gray-700 dark:text-gray-300" style="width: 70px;">Policies</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -598,25 +736,25 @@ const nextPage = () => {
                       :class="{ 'bg-blue-50 dark:bg-blue-950': selectedAnalysis?.requestId === analysis.requestId }"
                       @click="viewAnalysisDetails(analysis)"
                     >
-                      <td class="p-3" style="width: 120px;">
-                        <code class="text-sm font-mono bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
-                          {{ analysis.requestId }}
+                      <td class="p-2" style="width: 100px;">
+                        <code class="text-xs font-mono bg-gray-100 dark:bg-gray-700 px-1 py-0.5 rounded">
+                          {{ analysis.requestId.slice(0, 6) }}
                         </code>
                       </td>
-                      <td class="p-3" style="width: 150px;">
-                        <span class="text-sm">{{ formatDate(analysis.analyzedAt) }}</span>
+                      <td class="p-2" style="width: 130px;">
+                        <span class="text-xs">{{ formatDate(analysis.analyzedAt) }}</span>
                       </td>
-                      <td class="p-3" style="min-width: 600px;">
-                        <div class="flex flex-col gap-1">
-                          <span class="text-sm font-medium text-gray-900 dark:text-white" :title="extractHostAndPath(analysis).host">
+                      <td class="p-2" style="max-width: 300px; min-width: 200px;">
+                        <div class="flex flex-col gap-0.5">
+                          <span class="text-sm font-medium text-gray-900 dark:text-white truncate" :title="extractHostAndPath(analysis).host">
                             {{ extractHostAndPath(analysis).host }}
                           </span>
-                          <span class="text-xs text-gray-600 dark:text-gray-400" :title="extractHostAndPath(analysis).path">
+                          <span class="text-xs text-gray-600 dark:text-gray-400 truncate" :title="extractHostAndPath(analysis).path">
                             {{ extractHostAndPath(analysis).path }}
                           </span>
                         </div>
                       </td>
-                      <td class="p-3" style="min-width: 140px;">
+                      <td class="p-2" style="width: 120px;">
                         <div class="flex gap-1 flex-wrap">
                           <Badge
                             v-if="analysis.vulnerabilities.filter((v: any) => v.severity === 'high').length > 0"
@@ -644,14 +782,14 @@ const nextPage = () => {
                           />
                         </div>
                       </td>
-                      <td class="p-3" style="width: 80px;">
-                        <span class="font-medium">{{ analysis.policies.length }}</span>
+                      <td class="p-2" style="width: 70px;">
+                        <span class="text-sm font-medium">{{ analysis.policies.length }}</span>
                       </td>
                     </tr>
                     
                     <!-- Expanded Details Row -->
                     <tr v-if="selectedAnalysis?.requestId === analysis.requestId" class="bg-gray-50 dark:bg-gray-900">
-                      <td colspan="6" class="p-0">
+                      <td colspan="5" class="p-0">
                         <div class="p-6 space-y-6">
                           <!-- Header Info -->
                           <div class="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-white dark:bg-gray-800 rounded-lg border">
@@ -795,6 +933,106 @@ const nextPage = () => {
           </div>
         </template>
       </Card>
+          </div>
+        </TabPanel>
+
+        <!-- Settings Tab -->
+        <TabPanel header="Settings">
+          <div class="space-y-6">
+            <!-- Settings Summary -->
+            <Card>
+              <template #title>Scan Configuration</template>
+              <template #content>
+                <div class="flex flex-col lg:flex-row gap-6 items-start">
+                  <div class="flex-1">
+                    <p class="text-gray-700 dark:text-gray-300 mb-4">
+                      Configure which CSP vulnerabilities to scan for. You can enable/disable individual checks or use preset scanning modes.
+                    </p>
+                    <div class="text-sm text-gray-600 dark:text-gray-400">
+                      <strong>{{ enabledChecksCount }}/{{ totalChecksCount }}</strong> checks enabled
+                    </div>
+                  </div>
+                  
+                  <!-- Preset Buttons -->
+                  <div class="flex flex-col sm:flex-row gap-3">
+                    <Button 
+                      label="Aggressive" 
+                      severity="danger" 
+                      size="small" 
+                      @click="setAggressiveMode"
+                      title="Enable all vulnerability checks for maximum security coverage"
+                    />
+                    <Button 
+                      label="Recommended" 
+                      severity="success" 
+                      size="small" 
+                      @click="setRecommendedMode"
+                      title="Enable high and medium severity checks (recommended for most users)"
+                    />
+                    <Button 
+                      label="Light" 
+                      severity="secondary" 
+                      size="small" 
+                      @click="setLightMode"
+                      title="Enable only critical/high severity checks for faster scanning"
+                    />
+                    <Button 
+                      label="Disable All" 
+                      severity="secondary" 
+                      outlined 
+                      size="small" 
+                      @click="disableAllChecks"
+                    />
+                  </div>
+                </div>
+              </template>
+            </Card>
+
+            <!-- CSP Checks Configuration -->
+            <Card>
+              <template #title>CSP Vulnerability Checks</template>
+              <template #content>
+                <div class="space-y-8">
+                  <div v-for="(checks, category) in checksByCategory" :key="category">
+                    <h3 class="text-lg font-semibold mb-4 text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">
+                      {{ category }}
+                    </h3>
+                    
+                    <div class="grid grid-cols-1 gap-4">
+                      <div
+                        v-for="check in checks"
+                        :key="check.id"
+                        class="flex items-start gap-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                      >
+                        <InputSwitch 
+                          v-model="cspCheckSettings[check.id as keyof typeof cspCheckSettings].enabled" 
+                          class="mt-1"
+                        />
+                        
+                        <div class="flex-1 min-w-0">
+                          <div class="flex items-center gap-3 mb-2">
+                            <h4 class="font-medium text-gray-900 dark:text-white">
+                              {{ check.name }}
+                            </h4>
+                            <Badge 
+                              :value="check.severity.toUpperCase()" 
+                              :severity="check.severity === 'high' ? 'danger' : check.severity === 'medium' ? 'warning' : check.severity === 'low' ? 'info' : 'secondary'"
+                              class="text-xs"
+                            />
+                          </div>
+                          <p class="text-sm text-gray-600 dark:text-gray-400">
+                            {{ check.description }}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </Card>
+          </div>
+        </TabPanel>
+      </TabView>
     </div>
   </div>
 </template>

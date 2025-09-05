@@ -14,6 +14,9 @@ export interface FrontendSDK {
     setCreateFindings: (value: boolean) => Promise<void>;
     clearCspCache: () => Promise<void>;
     exportCspFindings: (format: "json" | "csv") => Promise<string>;
+    getCspCheckSettings: () => Promise<Record<string, boolean>>;
+    setCspCheckSettings: (settings: Record<string, boolean>) => Promise<void>;
+    updateCspCheckSetting: (checkId: string, enabled: boolean) => Promise<void>;
   };
 }
 

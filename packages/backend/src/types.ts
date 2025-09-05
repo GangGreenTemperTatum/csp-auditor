@@ -75,3 +75,13 @@ export interface CspAnalysisResult {
   vulnerabilities: CspVulnerability[];
   analyzedAt: Date;
 }
+
+export interface CspCheckSettings {
+  [key: string]: {
+    enabled: boolean;
+    name: string;
+    category: string;
+    severity: Severity;
+    description: string;
+  };
+}

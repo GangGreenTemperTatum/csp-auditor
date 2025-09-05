@@ -8,6 +8,30 @@ const analysisCache = new Map<string, CspAnalysisResult>();
 let respectScope = true;
 let createFindings = false;
 
+// Default CSP check settings - all enabled by default
+let cspCheckSettings: Record<string, boolean> = {
+  'script-wildcard': true,
+  'script-unsafe-inline': true,
+  'script-unsafe-eval': true,
+  'script-data-uri': true,
+  'object-wildcard': true,
+  'jsonp-bypass-risk': true,
+  'angularjs-bypass': true,
+  'ai-ml-host': true,
+  'web3-host': true,
+  'cdn-supply-chain': true,
+  'missing-trusted-types': true,
+  'missing-require-trusted-types': true,
+  'missing-essential-directive': true,
+  'permissive-base-uri': true,
+  'style-wildcard': true,
+  'style-unsafe-inline': true,
+  'deprecated-header': true,
+  'user-content-host': true,
+  'vulnerable-js-host': true,
+  'nonce-unsafe-inline-conflict': true,
+};
+
 const analyzeCspHeaders = async (
   sdk: SDK,
   requestId: string,
@@ -154,7 +178,7 @@ const processWorkflowCspAnalysis = async (
       );
       policies.push(policy);
 
-      const vulnerabilities = EnhancedCspAnalyzer.analyzePolicy(policy);
+      const vulnerabilities = EnhancedCspAnalyzer.analyzePolicy(policy, cspCheckSettings);
       allVulnerabilities.push(...vulnerabilities);
     }
 
@@ -217,6 +241,20 @@ const getCreateFindings = async (sdk: SDK): Promise<boolean> => {
   return createFindings;
 };
 
+const getCspCheckSettings = async (sdk: SDK): Promise<Record<string, boolean>> => {
+  return cspCheckSettings;
+};
+
+const setCspCheckSettings = async (sdk: SDK, settings: Record<string, boolean>): Promise<void> => {
+  cspCheckSettings = { ...settings };
+  sdk.console.log(`CSP check settings updated: ${Object.keys(settings).length} checks configured`);
+};
+
+const updateCspCheckSetting = async (sdk: SDK, checkId: string, enabled: boolean): Promise<void> => {
+  cspCheckSettings[checkId] = enabled;
+  sdk.console.log(`CSP check setting updated: ${checkId} = ${enabled}`);
+};
+
 export type API = DefineAPI<{
   analyzeCspHeaders: typeof analyzeCspHeaders;
   getCspAnalysis: typeof getCspAnalysis;
@@ -229,6 +267,9 @@ export type API = DefineAPI<{
   getScopeRespecting: typeof getScopeRespecting;
   setCreateFindings: typeof setCreateFindings;
   getCreateFindings: typeof getCreateFindings;
+  getCspCheckSettings: typeof getCspCheckSettings;
+  setCspCheckSettings: typeof setCspCheckSettings;
+  updateCspCheckSetting: typeof updateCspCheckSetting;
 }>;
 
 export function init(sdk: SDK<API>) {
@@ -243,6 +284,9 @@ export function init(sdk: SDK<API>) {
   sdk.api.register("getScopeRespecting", getScopeRespecting);
   sdk.api.register("setCreateFindings", setCreateFindings);
   sdk.api.register("getCreateFindings", getCreateFindings);
+  sdk.api.register("getCspCheckSettings", getCspCheckSettings);
+  sdk.api.register("setCspCheckSettings", setCspCheckSettings);
+  sdk.api.register("updateCspCheckSetting", updateCspCheckSetting);
 
   try {
     sdk.events.onInterceptResponse(async (sdk, request, response) => {
