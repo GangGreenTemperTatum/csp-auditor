@@ -96,7 +96,7 @@ export interface CspStats {
     info: number;
   };
   typeStats: Record<string, number>;
-  lastAnalyzed: Date | null;
+  lastAnalyzed: Date | undefined;
 }
 
 export interface FindingFilter {

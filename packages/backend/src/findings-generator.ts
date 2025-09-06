@@ -1,4 +1,5 @@
 import type { SDK } from "caido:plugin";
+import type { Request, Response } from "caido:utils";
 
 import type { CspVulnerability } from "./types";
 import { VULNERABILITY_RULES } from "./vulnerability-rules";
@@ -8,8 +9,8 @@ export class FindingsGenerator {
 
   static async createFinding(
     vulnerability: CspVulnerability,
-    request: any, // Caido Request object
-    response: any, // Caido Response object
+    request: unknown, // Caido Request object
+    response: unknown, // Caido Response object
     sdk: SDK,
   ): Promise<void> {
     try {
@@ -19,8 +20,8 @@ export class FindingsGenerator {
         title: rule.title,
         description: this.generateDetailedDescription(vulnerability, rule),
         reporter: this.REPORTER_NAME,
-        request: request,
-        response: response,
+        request: request as Request,
+        response: response as Response,
         severity: this.mapSeverityToCaido(vulnerability.severity),
       };
 
@@ -37,8 +38,8 @@ export class FindingsGenerator {
 
   static async createMultipleFindings(
     vulnerabilities: CspVulnerability[],
-    request: any,
-    response: any,
+    request: unknown,
+    response: unknown,
     sdk: SDK,
   ): Promise<void> {
     const promises = vulnerabilities.map((vuln) =>
@@ -46,6 +47,7 @@ export class FindingsGenerator {
     );
 
     try {
+      // eslint-disable-next-line compat/compat
       await Promise.all(promises);
       sdk.console.log(`Created ${vulnerabilities.length} CSP findings`);
     } catch (error) {
@@ -73,7 +75,7 @@ export class FindingsGenerator {
     ];
 
     // Add CWE information if available
-    if (rule.cweId) {
+    if (typeof rule.cweId === "number" && rule.cweId > 0) {
       sections.push(
         `<h3>References</h3>`,
         `<p><strong>CWE:</strong> <a href="https://cwe.mitre.org/data/definitions/${rule.cweId}.html">CWE-${rule.cweId}</a></p>`,
@@ -232,10 +234,10 @@ export class FindingsGenerator {
     return grouped;
   }
 
-  static async cleanupOldFindings(
+  static cleanupOldFindings(
     sdk: SDK,
     maxAge: number = 24 * 60 * 60 * 1000,
-  ): Promise<void> {
+  ): void {
     // This would need to be implemented based on Caido's findings API
     // For now, we'll just log the intent
     sdk.console.log(`Would cleanup CSP findings older than ${maxAge}ms`);
