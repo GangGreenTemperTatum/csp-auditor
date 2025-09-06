@@ -132,6 +132,51 @@ const getCspStats = (sdk: SDK): Promise<Record<string, unknown>> => {
   }
 };
 
+// Helper function to extract host and path from analysis
+const extractHostAndPath = (analysis: CspAnalysisResult) => {
+  const firstPolicy = analysis.policies[0];
+
+  if (firstPolicy?.url !== undefined && firstPolicy.url.trim() !== "") {
+    try {
+      let urlToparse = firstPolicy.url;
+      if (
+        !urlToparse.startsWith("http://") &&
+        !urlToparse.startsWith("https://")
+      ) {
+        urlToparse = "https://" + urlToparse;
+      }
+
+      const url = new URL(urlToparse);
+      return {
+        host: url.hostname,
+        path: url.pathname || "/",
+      };
+    } catch (error) {
+      const parts = firstPolicy.url?.split("/") ?? [];
+      if (parts.length > 0) {
+        const firstPart = parts[0];
+        let hostPart = "N/A";
+        if (
+          firstPart !== null &&
+          firstPart !== undefined &&
+          firstPart.trim() !== ""
+        ) {
+          hostPart = firstPart;
+        }
+        return {
+          host: hostPart,
+          path: "/",
+        };
+      }
+    }
+  }
+
+  return {
+    host: "N/A",
+    path: "N/A",
+  };
+};
+
 const exportCspFindings = async (
   sdk: SDK,
   format: "json" | "csv" = "json",
@@ -140,11 +185,24 @@ const exportCspFindings = async (
   const allVulnerabilities = analyses.flatMap((a) => a.vulnerabilities);
 
   if (format === "json") {
+    const enrichedFindings = allVulnerabilities.map((vuln) => {
+      const analysis = analyses.find((a) => a.requestId === vuln.requestId);
+      const hostPath = analysis
+        ? extractHostAndPath(analysis)
+        : { host: "N/A", path: "N/A" };
+      return {
+        ...vuln,
+        host: hostPath.host,
+        path: hostPath.path,
+        analyzedAt: analysis?.analyzedAt?.toISOString() ?? null,
+      };
+    });
+
     return JSON.stringify(
       {
         exportedAt: new Date().toISOString(),
         totalFindings: allVulnerabilities.length,
-        findings: allVulnerabilities,
+        findings: enrichedFindings,
       },
       null,
       2,
@@ -157,17 +215,29 @@ const exportCspFindings = async (
       "Directive",
       "Value",
       "Description",
+      "Host",
+      "Path",
+      "Analyzed At",
       "Request ID",
     ];
-    const rows = allVulnerabilities.map((vuln) => [
-      vuln.id,
-      vuln.type,
-      vuln.severity,
-      vuln.directive,
-      vuln.value,
-      vuln.description.replace(/[",]/g, ""),
-      vuln.requestId,
-    ]);
+    const rows = allVulnerabilities.map((vuln) => {
+      const analysis = analyses.find((a) => a.requestId === vuln.requestId);
+      const hostPath = analysis
+        ? extractHostAndPath(analysis)
+        : { host: "N/A", path: "N/A" };
+      return [
+        vuln.id,
+        vuln.type,
+        vuln.severity,
+        vuln.directive,
+        vuln.value,
+        vuln.description.replace(/[",]/g, ""),
+        hostPath.host,
+        hostPath.path,
+        analysis?.analyzedAt?.toISOString() ?? "N/A",
+        vuln.requestId,
+      ];
+    });
 
     return [headers, ...rows].map((row) => row.join(",")).join("\n");
   }
