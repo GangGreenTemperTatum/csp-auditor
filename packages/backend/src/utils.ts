@@ -6,6 +6,7 @@ export function generateId(): string {
 
 export function normalizeUrl(url: string): string {
   try {
+    // eslint-disable-next-line compat/compat
     const urlObj = new URL(url);
     return `${urlObj.protocol}//${urlObj.host}`;
   } catch {
@@ -15,6 +16,7 @@ export function normalizeUrl(url: string): string {
 
 export function extractDomain(url: string): string {
   try {
+    // eslint-disable-next-line compat/compat
     const urlObj = new URL(url);
     return urlObj.hostname;
   } catch {

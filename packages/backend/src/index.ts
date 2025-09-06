@@ -1,4 +1,6 @@
+/* eslint-disable compat/compat */
 import type { DefineAPI, SDK } from "caido:plugin";
+import type { Request } from "caido:utils";
 
 import { getBypassCount, getCSPBypassData } from "./bypass-database";
 import { CspParser } from "./csp-parser";
@@ -33,43 +35,45 @@ let cspCheckSettings: Record<string, boolean> = {
   "nonce-unsafe-inline-conflict": true,
 };
 
-const analyzeCspHeaders = async (
+const analyzeCspHeaders = (
   sdk: SDK,
   requestId: string,
-): Promise<CspAnalysisResult | null> => {
+): Promise<CspAnalysisResult | undefined> => {
   try {
     if (analysisCache.has(requestId)) {
-      return analysisCache.get(requestId)!;
+      return Promise.resolve(analysisCache.get(requestId)!);
     }
 
-    return {
+    return Promise.resolve({
       requestId,
       policies: [],
       vulnerabilities: [],
       analyzedAt: new Date(),
-    };
+    });
   } catch (error) {
     sdk.console.error(
       `CSP analysis failed for ${requestId}: ${error instanceof Error ? error.message : String(error)}`,
     );
-    return null;
+    return Promise.resolve(undefined);
   }
 };
 
-const getCspAnalysis = async (
+const getCspAnalysis = (
   sdk: SDK,
   requestId: string,
-): Promise<CspAnalysisResult | null> => {
-  return analysisCache.get(requestId) || null;
+): Promise<CspAnalysisResult | undefined> => {
+  return Promise.resolve(analysisCache.get(requestId) || undefined);
 };
 
-const getAllCspAnalyses = async (sdk: SDK): Promise<CspAnalysisResult[]> => {
-  return Array.from(analysisCache.values()).sort(
-    (a, b) => b.analyzedAt.getTime() - a.analyzedAt.getTime(),
+const getAllCspAnalyses = (sdk: SDK): Promise<CspAnalysisResult[]> => {
+  return Promise.resolve(
+    Array.from(analysisCache.values()).sort(
+      (a, b) => b.analyzedAt.getTime() - a.analyzedAt.getTime(),
+    ),
   );
 };
 
-const getCspStats = async (sdk: SDK): Promise<Record<string, any>> => {
+const getCspStats = (sdk: SDK): Promise<Record<string, unknown>> => {
   try {
     const analyses = Array.from(analysisCache.values());
 
@@ -103,25 +107,28 @@ const getCspStats = async (sdk: SDK): Promise<Record<string, any>> => {
         ),
       },
       typeStats: {},
-      lastAnalyzed: analyses.length > 0 ? new Date() : null,
+      lastAnalyzed: analyses.length > 0 ? new Date() : undefined,
     };
 
     for (const analysis of analyses) {
       for (const vuln of analysis.vulnerabilities) {
-        (stats.typeStats as any)[vuln.type] =
-          ((stats.typeStats as any)[vuln.type] || 0) + 1;
+        const currentCount = (stats.typeStats as Record<string, number>)[
+          vuln.type
+        ];
+        (stats.typeStats as Record<string, number>)[vuln.type] =
+          (typeof currentCount === "number" ? currentCount : 0) + 1;
       }
     }
 
-    return stats;
+    return Promise.resolve(stats);
   } catch (error) {
-    return {
+    return Promise.resolve({
       totalAnalyses: 0,
       totalVulnerabilities: 0,
       severityStats: { high: 0, medium: 0, low: 0, info: 0 },
       typeStats: {},
-      lastAnalyzed: null,
-    };
+      lastAnalyzed: undefined,
+    });
   }
 };
 
@@ -166,18 +173,19 @@ const exportCspFindings = async (
   }
 };
 
-const clearCspCache = async (sdk: SDK): Promise<void> => {
+const clearCspCache = (sdk: SDK): Promise<void> => {
   const count = analysisCache.size;
   analysisCache.clear();
   sdk.console.log(`Cleared CSP analysis cache (${count} entries)`);
+  return Promise.resolve();
 };
 
 const processWorkflowCspAnalysis = async (
   sdk: SDK,
   requestData: { id: string; host: string; path: string },
   responseData: { headers: Record<string, string[]> },
-  request?: any,
-): Promise<CspAnalysisResult | null> => {
+  request?: unknown,
+): Promise<CspAnalysisResult | undefined> => {
   try {
     const requestId = requestData.id;
     const url = `${requestData.host}${requestData.path}`;
@@ -185,7 +193,7 @@ const processWorkflowCspAnalysis = async (
     const cspHeadersData = CspParser.extractCspHeaders(responseData.headers);
 
     if (cspHeadersData.length === 0) {
-      return null;
+      return undefined;
     }
 
     const policies: CspPolicy[] = [];
@@ -220,7 +228,11 @@ const processWorkflowCspAnalysis = async (
       `CSP Analysis complete: ${allVulnerabilities.length} vulnerabilities found, createFindings: ${createFindings}`,
     );
 
-    if (createFindings && allVulnerabilities.length > 0 && request) {
+    if (
+      createFindings === true &&
+      allVulnerabilities.length > 0 &&
+      typeof request !== "undefined"
+    ) {
       try {
         const title = `CSP Vulnerabilities - ${policies.length} polic${policies.length === 1 ? "y" : "ies"} found`;
         const description =
@@ -236,7 +248,7 @@ const processWorkflowCspAnalysis = async (
           title,
           description,
           reporter: "CSP Auditor",
-          request,
+          request: request as Request,
           dedupeKey: `csp-${requestData.host}-${requestData.path}`,
         });
 
@@ -255,11 +267,11 @@ const processWorkflowCspAnalysis = async (
     sdk.console.error(
       `CSP analysis failed: ${error instanceof Error ? error.message : String(error)}`,
     );
-    return null;
+    return undefined;
   }
 };
 
-const setScopeRespecting = async (
+const setScopeRespecting = (
   sdk: SDK,
   respectScopeEnabled: boolean,
 ): Promise<void> => {
@@ -267,13 +279,14 @@ const setScopeRespecting = async (
   sdk.console.log(
     `CSP Auditor scope setting updated: ${respectScope ? "respecting scope" : "ignoring scope"}`,
   );
+  return Promise.resolve();
 };
 
-const getScopeRespecting = async (sdk: SDK): Promise<boolean> => {
-  return respectScope;
+const getScopeRespecting = (sdk: SDK): Promise<boolean> => {
+  return Promise.resolve(respectScope);
 };
 
-const setCreateFindings = async (
+const setCreateFindings = (
   sdk: SDK,
   createFindingsEnabled: boolean,
 ): Promise<void> => {
@@ -281,19 +294,18 @@ const setCreateFindings = async (
   sdk.console.log(
     `CSP Auditor findings creation updated: ${createFindings ? "enabled" : "disabled"} (value: ${createFindings})`,
   );
+  return Promise.resolve();
 };
 
-const getCreateFindings = async (sdk: SDK): Promise<boolean> => {
-  return createFindings;
+const getCreateFindings = (sdk: SDK): Promise<boolean> => {
+  return Promise.resolve(createFindings);
 };
 
-const getCspCheckSettings = async (
-  sdk: SDK,
-): Promise<Record<string, boolean>> => {
-  return cspCheckSettings;
+const getCspCheckSettings = (sdk: SDK): Promise<Record<string, boolean>> => {
+  return Promise.resolve(cspCheckSettings);
 };
 
-const setCspCheckSettings = async (
+const setCspCheckSettings = (
   sdk: SDK,
   settings: Record<string, boolean>,
 ): Promise<void> => {
@@ -301,15 +313,17 @@ const setCspCheckSettings = async (
   sdk.console.log(
     `CSP check settings updated: ${Object.keys(settings).length} checks configured`,
   );
+  return Promise.resolve();
 };
 
-const updateCspCheckSetting = async (
+const updateCspCheckSetting = (
   sdk: SDK,
   checkId: string,
   enabled: boolean,
 ): Promise<void> => {
   cspCheckSettings[checkId] = enabled;
   sdk.console.log(`CSP check setting updated: ${checkId} = ${enabled}`);
+  return Promise.resolve();
 };
 
 interface BypassEntry {
@@ -319,7 +333,7 @@ interface BypassEntry {
   id: string;
 }
 
-const getBypassDatabase = async (sdk: SDK): Promise<BypassEntry[]> => {
+const getBypassDatabase = (sdk: SDK): Promise<BypassEntry[]> => {
   try {
     const bypassCount = getBypassCount();
     sdk.console.log(`Loading CSP bypass database (${bypassCount} entries)`);
@@ -329,12 +343,12 @@ const getBypassDatabase = async (sdk: SDK): Promise<BypassEntry[]> => {
     sdk.console.log(
       `Successfully loaded ${entries.length} bypass entries from TSV data`,
     );
-    return entries;
+    return Promise.resolve(entries);
   } catch (error) {
     sdk.console.error(
       `Failed to load bypass database: ${error instanceof Error ? error.message : String(error)}`,
     );
-    return [];
+    return Promise.resolve([]);
   }
 };
 
@@ -345,9 +359,14 @@ const parseTSV = (tsvContent: string): BypassEntry[] => {
   // Skip header line
   for (let i = 1; i < lines.length; i++) {
     const line = lines[i];
-    if (!line) continue;
+    if (line === undefined || line.trim() === "") continue;
     const [domain, code] = line.split("\t");
-    if (domain && code) {
+    if (
+      domain !== undefined &&
+      domain.trim() !== "" &&
+      code !== undefined &&
+      code.trim() !== ""
+    ) {
       entries.push({
         domain: domain.trim(),
         code: code.trim(),

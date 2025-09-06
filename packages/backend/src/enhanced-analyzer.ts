@@ -282,7 +282,7 @@ export class EnhancedCspAnalyzer {
           type: "permissive-base-uri",
           severity: "medium",
           directive: "base-uri",
-          value: baseUri?.values.join(" ") || "missing",
+          value: baseUri?.values.join(" ") ?? "missing",
           title: "Permissive Base URI Policy",
           description: "Unrestricted base URI can enable injection attacks",
           remediation: "Set base-uri to 'self' or specific trusted origins",

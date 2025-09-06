@@ -361,7 +361,12 @@ export class EnhancedBlacklistManager {
     for (const vulnJs of ENHANCED_VULNERABLE_JS) {
       if (cleanDomain.includes(vulnJs.domain)) {
         // Check path matching if specified
-        if (vulnJs.paths && path) {
+        if (
+          vulnJs.paths &&
+          vulnJs.paths.length > 0 &&
+          path !== undefined &&
+          path.trim() !== ""
+        ) {
           const pathMatch = vulnJs.paths.some((vulnPath) =>
             path.includes(vulnPath),
           );
@@ -412,8 +417,15 @@ export class EnhancedBlacklistManager {
     if (supplyChain.isRisky) {
       threats.push({
         type: "supply-chain",
-        severity: supplyChain.severity || "medium",
-        risk: supplyChain.risk || "Supply chain risk detected",
+        severity:
+          supplyChain.severity !== undefined &&
+          supplyChain.severity.trim() !== ""
+            ? supplyChain.severity
+            : "medium",
+        risk:
+          supplyChain.risk !== undefined && supplyChain.risk.trim() !== ""
+            ? supplyChain.risk
+            : "Supply chain risk detected",
       });
     }
 
@@ -421,8 +433,14 @@ export class EnhancedBlacklistManager {
     if (aiMl.isRisky) {
       threats.push({
         type: "ai-ml-service",
-        severity: aiMl.severity || "medium",
-        risk: aiMl.risk || "AI/ML service integration risk",
+        severity:
+          aiMl.severity !== undefined && aiMl.severity.trim() !== ""
+            ? aiMl.severity
+            : "medium",
+        risk:
+          aiMl.risk !== undefined && aiMl.risk.trim() !== ""
+            ? aiMl.risk
+            : "AI/ML service integration risk",
       });
     }
 
@@ -430,8 +448,14 @@ export class EnhancedBlacklistManager {
     if (web3.isRisky) {
       threats.push({
         type: "web3-integration",
-        severity: web3.severity || "high",
-        risk: web3.risk || "Web3/Cryptocurrency integration risk",
+        severity:
+          web3.severity !== undefined && web3.severity.trim() !== ""
+            ? web3.severity
+            : "high",
+        risk:
+          web3.risk !== undefined && web3.risk.trim() !== ""
+            ? web3.risk
+            : "Web3/Cryptocurrency integration risk",
       });
     }
 
@@ -440,7 +464,10 @@ export class EnhancedBlacklistManager {
       threats.push({
         type: "vulnerable-js",
         severity: "high",
-        risk: vulnJs.risk || "Vulnerable JavaScript library detected",
+        risk:
+          vulnJs.risk !== undefined && vulnJs.risk.trim() !== ""
+            ? vulnJs.risk
+            : "Vulnerable JavaScript library detected",
         cve: vulnJs.cve,
       });
     }

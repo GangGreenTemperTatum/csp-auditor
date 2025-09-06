@@ -26,12 +26,12 @@ export class EnhancedPolicyGenerator {
     // Enhanced script-src with modern security
     let scriptSrc = "script-src 'self'";
 
-    if (options.useStrictDynamic) {
+    if (options.useStrictDynamic === true) {
       // CSP Level 3 strict-dynamic for modern apps
       scriptSrc += " 'strict-dynamic'";
     }
 
-    if (options.allowInlineScripts) {
+    if (options.allowInlineScripts === true) {
       // Discouraged but provide guidance
       scriptSrc += " 'unsafe-inline'";
     } else {
@@ -39,7 +39,7 @@ export class EnhancedPolicyGenerator {
       scriptSrc += " 'nonce-{GENERATED_NONCE}'";
     }
 
-    if (!options.allowDataUris) {
+    if (options.allowDataUris !== true) {
       // Block data: URIs by default
       scriptSrc += " 'unsafe-eval'"; // Remove this - typo, should not add unsafe-eval when blocking data
       scriptSrc = scriptSrc.replace(" 'unsafe-eval'", ""); // Fix the typo
@@ -49,7 +49,7 @@ export class EnhancedPolicyGenerator {
 
     // Modern style-src
     let styleSrc = "style-src 'self'";
-    if (options.allowInlineStyles) {
+    if (options.allowInlineStyles === true) {
       styleSrc += " 'unsafe-inline'";
     } else {
       styleSrc += " 'nonce-{GENERATED_NONCE}'";
@@ -64,7 +64,10 @@ export class EnhancedPolicyGenerator {
     directives.push("upgrade-insecure-requests"); // Force HTTPS
 
     // CSP Level 3 features
-    if (options.enableTrustedTypes && options.includeCsp3Features) {
+    if (
+      options.enableTrustedTypes === true &&
+      options.includeCsp3Features === true
+    ) {
       directives.push("trusted-types default");
       directives.push("require-trusted-types-for 'script'");
     }
@@ -376,7 +379,7 @@ export class EnhancedPolicyGenerator {
       const parts = directive.split(/\s+/);
       const name = parts[0];
       const values = parts.slice(1);
-      if (name) {
+      if (name !== undefined && name.trim() !== "") {
         directiveMap.set(name, values);
       }
     }
@@ -396,7 +399,8 @@ export class EnhancedPolicyGenerator {
     }
 
     // Security features (30 points total)
-    if (directiveMap.get("object-src")?.includes("'none'")) {
+    const objectSrc = directiveMap.get("object-src");
+    if (objectSrc && objectSrc.includes("'none'")) {
       score += 10;
       strengths.push("Objects/plugins completely blocked");
     }

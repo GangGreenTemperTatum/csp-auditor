@@ -31,13 +31,13 @@ const stats = ref<CspStats>({
 
 const allAnalyses = ref<CspAnalysisResult[]>([]);
 const loading = ref(false);
-const selectedAnalysis = ref<CspAnalysisResult | null>(null);
+const selectedAnalysis = ref<CspAnalysisResult | undefined>(undefined);
 
 const currentPage = ref(1);
 const itemsPerPage = ref(10);
 
 const autoRefreshEnabled = ref(true);
-const refreshInterval = ref<number | null>(null);
+const refreshInterval = ref<number | undefined>(undefined);
 const REFRESH_INTERVAL_MS = 5000;
 
 const respectScope = ref(true);
@@ -202,8 +202,8 @@ const activeTab = ref(0);
 
 // Modal state for vulnerability details
 const showVulnerabilityModal = ref(false);
-const selectedVulnerability = ref<any>(null);
-const selectedAnalysisForModal = ref<CspAnalysisResult | null>(null);
+const selectedVulnerability = ref<unknown>(undefined);
+const selectedAnalysisForModal = ref<CspAnalysisResult | undefined>(undefined);
 
 // CSP Bypass data
 const bypassEntries = ref<BypassEntry[]>([]);
@@ -246,7 +246,8 @@ const calculateStatsFromAnalyses = (analyses: CspAnalysisResult[]) => {
 
   const typeStats: Record<string, number> = {};
   for (const vuln of allVulnerabilities) {
-    typeStats[vuln.type] = (typeStats[vuln.type] || 0) + 1;
+    typeStats[vuln.type] =
+      (typeof typeStats[vuln.type] === "number" ? typeStats[vuln.type] : 0) + 1;
   }
 
   return {
@@ -259,6 +260,7 @@ const calculateStatsFromAnalyses = (analyses: CspAnalysisResult[]) => {
 const loadDashboardData = async () => {
   loading.value = true;
   try {
+    // eslint-disable-next-line compat/compat
     const [statsData, analysesData] = await Promise.all([
       sdk.backend.getCspStats(),
       sdk.backend.getAllCspAnalyses(),
@@ -287,7 +289,10 @@ const refreshData = async () => {
 };
 
 const startAutoRefresh = () => {
-  if (autoRefreshEnabled.value && !refreshInterval.value) {
+  if (
+    autoRefreshEnabled.value === true &&
+    refreshInterval.value === undefined
+  ) {
     refreshInterval.value = window.setInterval(async () => {
       if (autoRefreshEnabled.value && !loading.value) {
         const currentTotalAnalyses = stats.value.totalAnalyses;
@@ -295,7 +300,10 @@ const startAutoRefresh = () => {
         try {
           const [newStats] = await Promise.all([sdk.backend.getCspStats()]);
 
-          if (newStats.totalAnalyses !== currentTotalAnalyses) {
+          if (
+            typeof newStats.totalAnalyses === "number" &&
+            newStats.totalAnalyses !== currentTotalAnalyses
+          ) {
             await loadDashboardData();
           }
         } catch (error) {
@@ -307,9 +315,9 @@ const startAutoRefresh = () => {
 };
 
 const stopAutoRefresh = () => {
-  if (refreshInterval.value) {
+  if (refreshInterval.value !== undefined) {
     window.clearInterval(refreshInterval.value);
-    refreshInterval.value = null;
+    refreshInterval.value = undefined;
   }
 };
 
@@ -375,6 +383,7 @@ const exportFindings = async (format: "json" | "csv") => {
     const blob = new Blob([data], {
       type: format === "json" ? "application/json" : "text/csv",
     });
+    // eslint-disable-next-line compat/compat
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
@@ -382,6 +391,7 @@ const exportFindings = async (format: "json" | "csv") => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    // eslint-disable-next-line compat/compat
     URL.revokeObjectURL(url);
   } catch (error) {
     console.error("Failed to export findings:", error);
@@ -395,7 +405,15 @@ const getSeverityBadgeClass = (severity: string) => {
     low: "bg-yellow-500",
     info: "bg-blue-500",
   };
-  return classes[severity] || "bg-gray-500";
+  const severityClass = classes[severity];
+  if (
+    severityClass !== null &&
+    severityClass !== undefined &&
+    severityClass.trim() !== ""
+  ) {
+    return severityClass;
+  }
+  return "bg-gray-500";
 };
 
 const formatDate = (date: Date | string) => {
@@ -405,7 +423,7 @@ const formatDate = (date: Date | string) => {
 const extractHostAndPath = (analysis: CspAnalysisResult) => {
   const firstPolicy = analysis.policies[0];
 
-  if (firstPolicy?.url) {
+  if (firstPolicy?.url !== null && firstPolicy.url.trim() !== "") {
     try {
       let urlToparse = firstPolicy.url;
       if (
@@ -423,7 +441,15 @@ const extractHostAndPath = (analysis: CspAnalysisResult) => {
     } catch (error) {
       const parts = firstPolicy.url.split("/");
       if (parts.length >= 1) {
-        const hostPart = parts[0]?.replace(/^https?:\/\//, "") || "N/A";
+        const firstPart = parts[0];
+        let hostPart = "N/A";
+        if (
+          firstPart !== null &&
+          firstPart !== undefined &&
+          firstPart.trim() !== ""
+        ) {
+          hostPart = firstPart.replace(/^https?:\/\//, "");
+        }
         const pathPart = "/" + parts.slice(1).join("/");
         return {
           host: hostPart,
@@ -461,7 +487,7 @@ const cspChecksArray = computed(() => {
 
 // Group checks by category
 const checksByCategory = computed(() => {
-  const grouped: Record<string, any[]> = {};
+  const grouped: Record<string, unknown[]> = {};
   cspChecksArray.value.forEach((check) => {
     if (!grouped[check.category]) {
       grouped[check.category] = [];
@@ -551,7 +577,7 @@ const saveCspCheckSettings = async () => {
 
 // Modal functions
 const showVulnerabilityDetails = (
-  vulnerability: any,
+  vulnerability: unknown,
   analysis: CspAnalysisResult,
 ) => {
   selectedVulnerability.value = vulnerability;
@@ -607,9 +633,20 @@ const copyToClipboard = async (text: string, type: string) => {
   }
 };
 
-const copyVulnerabilities = async (vulnerabilities: any[]) => {
+const copyVulnerabilities = async (vulnerabilities: unknown[]) => {
   const vulnText = vulnerabilities
-    .map((v) => `${v.type} (${v.severity.toUpperCase()}): ${v.description}`)
+    .map((v) => {
+      if (
+        typeof v === "object" &&
+        v !== null &&
+        "type" in v &&
+        "severity" in v &&
+        "description" in v
+      ) {
+        return `${v.type} (${String(v.severity).toUpperCase()}): ${v.description}`;
+      }
+      return String(v);
+    })
     .join("\n\n");
   await copyToClipboard(vulnText, "Vulnerabilities");
 };
@@ -700,6 +737,39 @@ const nextPage = () => {
   if (currentPage.value < totalPages.value) {
     currentPage.value++;
   }
+};
+
+// Helper function to safely update check settings
+const updateCheckSetting = (checkId: string, enabled: boolean) => {
+  (
+    cspCheckSettings.value as Record<
+      string,
+      {
+        enabled: boolean;
+        name: string;
+        category: string;
+        severity: string;
+        description: string;
+      }
+    >
+  )[checkId].enabled = enabled;
+};
+
+const getCheckEnabled = (checkId: string): boolean => {
+  return (
+    (
+      cspCheckSettings.value as Record<
+        string,
+        {
+          enabled: boolean;
+          name: string;
+          category: string;
+          severity: string;
+          description: string;
+        }
+      >
+    )[checkId]?.enabled ?? false
+  );
 };
 </script>
 
@@ -1577,12 +1647,11 @@ const nextPage = () => {
                         class="flex items-start gap-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors"
                       >
                         <InputSwitch
-                          v-model="
-                            cspCheckSettings[
-                              check.id as keyof typeof cspCheckSettings
-                            ].enabled
-                          "
+                          :model-value="getCheckEnabled(check.id)"
                           class="mt-1"
+                          @update:model-value="
+                            (value) => updateCheckSetting(check.id, value)
+                          "
                         />
 
                         <div class="flex-1 min-w-0">
@@ -1641,7 +1710,7 @@ const nextPage = () => {
             {{
               selectedVulnerability?.type
                 .replace(/-/g, " ")
-                .replace(/\b\w/g, (l: string) => l.toUpperCase()) ||
+                .replace(/\b\w/g, (l) => l.toUpperCase()) ||
               "Vulnerability Details"
             }}
           </h2>
@@ -1671,7 +1740,7 @@ const nextPage = () => {
                   {{
                     selectedVulnerability.type
                       .replace(/-/g, " ")
-                      .replace(/\b\w/g, (l: string) => l.toUpperCase())
+                      .replace(/\b\w/g, (l) => l.toUpperCase())
                   }}
                 </h3>
                 <div class="flex items-center gap-3 mb-3">

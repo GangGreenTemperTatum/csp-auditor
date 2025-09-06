@@ -77,7 +77,7 @@ export class CspParser {
       if (parts.length === 0) continue;
 
       const directiveName = parts[0]?.toLowerCase();
-      if (!directiveName) continue;
+      if (directiveName === undefined || directiveName.trim() === "") continue;
       const directiveValues = parts.slice(1);
 
       const directive: CspDirective = {
@@ -187,14 +187,14 @@ export class CspParser {
     }
   }
 
-  static computeEffectivePolicy(policies: CspPolicy[]): CspPolicy | null {
-    if (policies.length === 0) return null;
-    if (policies.length === 1) return policies[0] ?? null;
+  static computeEffectivePolicy(policies: CspPolicy[]): CspPolicy | undefined {
+    if (policies.length === 0) return undefined;
+    if (policies.length === 1) return policies[0] ?? undefined;
 
     // For multiple policies, we need to intersect the directives
     // This is a simplified approach - real CSP combination is complex
     const firstPolicy = policies[0];
-    if (!firstPolicy) return null;
+    if (!firstPolicy) return undefined;
 
     const effectivePolicy = { ...firstPolicy };
     effectivePolicy.id = generateId();

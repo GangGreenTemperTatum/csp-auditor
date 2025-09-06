@@ -176,7 +176,8 @@ export class BlacklistManager {
 
         // Check if path matches any vulnerable paths
         if (
-          path &&
+          path !== undefined &&
+          path.trim() !== "" &&
           vulnHost.paths.some((vulnPath) => path.includes(vulnPath))
         ) {
           return { isVulnerable: true, risk: vulnHost.risk };
@@ -207,7 +208,7 @@ export class BlacklistManager {
       results.push({
         type: "vulnerable-js",
         risk:
-          vulnCheck.risk ||
+          vulnCheck.risk ??
           "Domain hosts known vulnerable JavaScript libraries",
       });
     }

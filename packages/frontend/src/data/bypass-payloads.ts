@@ -199,7 +199,7 @@ export const bypassPayloads: Record<string, BypassPayload[]> = {
 
 export const getBypassesForVulnerability = (
   vulnerabilityType: string,
-  fullDatabase?: any[],
+  fullDatabase?: unknown[],
 ): BypassPayload[] => {
   // Get curated specific bypasses for this vulnerability type
   const specificBypasses = bypassPayloads[vulnerabilityType] || [];
@@ -231,7 +231,7 @@ export const getBypassesForVulnerability = (
 
 const filterDatabaseByVulnerabilityType = (
   vulnerabilityType: string,
-  database: any[],
+  database: unknown[],
 ): BypassPayload[] => {
   const filtered: BypassPayload[] = [];
 
@@ -244,11 +244,14 @@ const filterDatabaseByVulnerabilityType = (
       case "script-wildcard":
       case "script-unsafe-inline":
         if (
-          entry.technique === "AngularJS" ||
-          entry.technique === "Script Injection" ||
-          entry.technique === "Event Handler" ||
-          entry.technique === "Alpine.js" ||
-          entry.technique === "HTMX"
+          typeof entry === "object" &&
+          entry !== null &&
+          "technique" in entry &&
+          (entry.technique === "AngularJS" ||
+            entry.technique === "Script Injection" ||
+            entry.technique === "Event Handler" ||
+            entry.technique === "Alpine.js" ||
+            entry.technique === "HTMX")
         ) {
           relevanceScore = entry.technique === "AngularJS" ? 10 : 8;
           difficulty = entry.technique === "Event Handler" ? "easy" : "medium";
@@ -256,7 +259,12 @@ const filterDatabaseByVulnerabilityType = (
         break;
 
       case "jsonp-bypass-risk":
-        if (entry.technique === "JSONP") {
+        if (
+          typeof entry === "object" &&
+          entry !== null &&
+          "technique" in entry &&
+          entry.technique === "JSONP"
+        ) {
           relevanceScore = 10;
           difficulty = "easy";
         }
@@ -271,8 +279,12 @@ const filterDatabaseByVulnerabilityType = (
 
       case "script-unsafe-eval":
         if (
-          entry.technique === "Script Injection" ||
-          entry.code.includes("eval")
+          typeof entry === "object" &&
+          entry !== null &&
+          "technique" in entry &&
+          "code" in entry &&
+          (entry.technique === "Script Injection" ||
+            (typeof entry.code === "string" && entry.code.includes("eval")))
         ) {
           relevanceScore = 8;
           difficulty = "medium";
@@ -281,8 +293,12 @@ const filterDatabaseByVulnerabilityType = (
 
       case "object-wildcard":
         if (
-          entry.technique === "Iframe Injection" ||
-          entry.code.includes("<iframe")
+          typeof entry === "object" &&
+          entry !== null &&
+          "technique" in entry &&
+          "code" in entry &&
+          (entry.technique === "Iframe Injection" ||
+            (typeof entry.code === "string" && entry.code.includes("<iframe")))
         ) {
           relevanceScore = 8;
           difficulty = "medium";
@@ -291,8 +307,12 @@ const filterDatabaseByVulnerabilityType = (
 
       case "style-unsafe-inline":
         if (
-          entry.technique === "Link Preload" ||
-          entry.code.includes("<link")
+          typeof entry === "object" &&
+          entry !== null &&
+          "technique" in entry &&
+          "code" in entry &&
+          (entry.technique === "Link Preload" ||
+            (typeof entry.code === "string" && entry.code.includes("<link")))
         ) {
           relevanceScore = 8;
           difficulty = "medium";
