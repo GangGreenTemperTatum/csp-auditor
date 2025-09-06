@@ -17,8 +17,8 @@ _Hack the planet 🤘_
 [Report Bug](https://github.com/GangGreenTemperTatum/csp-auditor/issues) •
 [Request Feature](https://github.com/GangGreenTemperTatum/csp-auditor/issues)
 
-<!--![csp-auditor Panel](./public/images/csp-auditor-panel.png)-->
-<!--*CSP Auditor*-->
+![csp-auditor main panel](./assets/public/csp-auditor-main-panel.png)
+<div align="center"><i>csp-auditor main panel</i></div>
 
 <!--CSP Auditor is now available via the [Caido Plugin Library](https://caido.io/plugins)! 🥳 CSP Auditor was [submitted to the Caido Plugin Library](https://github.com/caido/store/pull/41) and is approved, it will be available for installation directly from the Caido plugin store page.-->
 
@@ -31,8 +31,6 @@ _Hack the planet 🤘_
 - [CSP Auditor](#csp-auditor)
   - [Overview](#overview)
   - [Features](#features)
-  - [Development TODO](#development-todo)
-    - [CSP Bypass Integration (COA)](#csp-bypass-integration-coa)
   - [Quick Start](#quick-start)
     - [Prerequisites](#prerequisites)
     - [Installation](#installation)
@@ -51,9 +49,6 @@ _Hack the planet 🤘_
 ## Overview
 
 CSP Auditor is a Caido plugin that helps you monitor and analyze Content Security Policies (CSP) in web applications, it is designed to mimic the [Burp Suite extension](https://github.com/portswigger/csp-auditor)'s functionality with additional improvements and integration with [`cspbypass.com`](https://cspbypass.com) for a built-in bypass database of real-world CSP bypass techniques, directly in Caido!
-
-![csp-auditor main panel](./assets/public/csp-auditor-main-panel.png)
-<div align="center"><i>csp-auditor main panel</i></div>
 
 ## Features
 
@@ -75,15 +70,6 @@ CSP Auditor is a Caido plugin that helps you monitor and analyze Content Securit
 - **Dashboard Statistics**: Overview of analyzed policies, vulnerabilities by severity, and detection trends
 
 <!-- Come [join](https://discord.com/invite/Xkafzujmuh) the **awesome** Caido discord channel and come speak to me about CSP Auditor in it's [dedicated channel](https://discord.com/channels/843915806748180492/1407063905511145653)! -->
-
----
-
-## Development TODO
-
-### CSP Bypass Integration (COA)
-- [x] Phase 1: Enhanced vulnerability modal with bypass examples and payload copying
-- [ ] Phase 2: Dedicated bypass testing tab with syntax highlighting
-- [ ] Phase 3: Inline bypass indicators and real-time analysis
 
 ---
 
