@@ -17,7 +17,21 @@ import {
   getDifficultyColor,
 } from "@/data/bypass-payloads";
 import { useSDK } from "@/plugins/sdk";
-import type { BypassEntry, CspAnalysisResult, CspStats } from "@/types";
+import type {
+  BypassEntry,
+  CspAnalysisResult,
+  CspStats,
+  CspVulnerability,
+} from "@/types";
+
+interface CspCheck {
+  id: string;
+  enabled: boolean;
+  name: string;
+  category: string;
+  severity: string;
+  description: string;
+}
 
 const sdk = useSDK();
 
@@ -26,7 +40,7 @@ const stats = ref<CspStats>({
   totalVulnerabilities: 0,
   severityStats: { high: 0, medium: 0, low: 0, info: 0 },
   typeStats: {},
-  lastAnalyzed: null,
+  lastAnalyzed: undefined,
 });
 
 const allAnalyses = ref<CspAnalysisResult[]>([]);
@@ -202,7 +216,7 @@ const activeTab = ref(0);
 
 // Modal state for vulnerability details
 const showVulnerabilityModal = ref(false);
-const selectedVulnerability = ref<unknown>(undefined);
+const selectedVulnerability = ref<CspVulnerability | undefined>(undefined);
 const selectedAnalysisForModal = ref<CspAnalysisResult | undefined>(undefined);
 
 // CSP Bypass data
@@ -246,8 +260,7 @@ const calculateStatsFromAnalyses = (analyses: CspAnalysisResult[]) => {
 
   const typeStats: Record<string, number> = {};
   for (const vuln of allVulnerabilities) {
-    typeStats[vuln.type] =
-      (typeof typeStats[vuln.type] === "number" ? typeStats[vuln.type] : 0) + 1;
+    typeStats[vuln.type] = (typeStats[vuln.type] ?? 0) + 1;
   }
 
   return {
@@ -275,7 +288,7 @@ const loadDashboardData = async () => {
       totalVulnerabilities: allStats.totalVulnerabilities,
       severityStats: allStats.severityStats,
       typeStats: allStats.typeStats,
-      lastAnalyzed: allAnalyses.value.length > 0 ? new Date() : null,
+      lastAnalyzed: allAnalyses.value.length > 0 ? new Date() : undefined,
     };
   } catch (error) {
     console.error("Failed to load dashboard data:", error);
@@ -423,7 +436,7 @@ const formatDate = (date: Date | string) => {
 const extractHostAndPath = (analysis: CspAnalysisResult) => {
   const firstPolicy = analysis.policies[0];
 
-  if (firstPolicy?.url !== null && firstPolicy.url.trim() !== "") {
+  if (firstPolicy?.url !== undefined && firstPolicy.url.trim() !== "") {
     try {
       let urlToparse = firstPolicy.url;
       if (
@@ -439,8 +452,8 @@ const extractHostAndPath = (analysis: CspAnalysisResult) => {
         path: url.pathname || "/",
       };
     } catch (error) {
-      const parts = firstPolicy.url.split("/");
-      if (parts.length >= 1) {
+      const parts = firstPolicy.url?.split("/") ?? [];
+      if (parts.length > 0) {
         const firstPart = parts[0];
         let hostPart = "N/A";
         if (
@@ -478,7 +491,7 @@ const getSeverityPercentage = computed(() => {
 });
 
 // Convert settings object to array for table display
-const cspChecksArray = computed(() => {
+const cspChecksArray = computed((): CspCheck[] => {
   return Object.entries(cspCheckSettings.value).map(([key, check]) => ({
     id: key,
     ...check,
@@ -486,8 +499,8 @@ const cspChecksArray = computed(() => {
 });
 
 // Group checks by category
-const checksByCategory = computed(() => {
-  const grouped: Record<string, unknown[]> = {};
+const checksByCategory = computed((): Record<string, CspCheck[]> => {
+  const grouped: Record<string, CspCheck[]> = {};
   cspChecksArray.value.forEach((check) => {
     if (!grouped[check.category]) {
       grouped[check.category] = [];
@@ -577,7 +590,7 @@ const saveCspCheckSettings = async () => {
 
 // Modal functions
 const showVulnerabilityDetails = (
-  vulnerability: unknown,
+  vulnerability: CspVulnerability,
   analysis: CspAnalysisResult,
 ) => {
   selectedVulnerability.value = vulnerability;
@@ -587,8 +600,8 @@ const showVulnerabilityDetails = (
 
 const closeVulnerabilityModal = () => {
   showVulnerabilityModal.value = false;
-  selectedVulnerability.value = null;
-  selectedAnalysisForModal.value = null;
+  selectedVulnerability.value = undefined;
+  selectedAnalysisForModal.value = undefined;
 };
 
 const getSeverityColor = (severity: string) => {
@@ -618,7 +631,7 @@ const paginatedAnalyses = computed(() => {
 
 const viewAnalysisDetails = (analysisData: CspAnalysisResult) => {
   if (selectedAnalysis.value?.requestId === analysisData.requestId) {
-    selectedAnalysis.value = null;
+    selectedAnalysis.value = undefined;
   } else {
     selectedAnalysis.value = analysisData;
   }
@@ -741,18 +754,19 @@ const nextPage = () => {
 
 // Helper function to safely update check settings
 const updateCheckSetting = (checkId: string, enabled: boolean) => {
-  (
-    cspCheckSettings.value as Record<
-      string,
-      {
-        enabled: boolean;
-        name: string;
-        category: string;
-        severity: string;
-        description: string;
-      }
-    >
-  )[checkId].enabled = enabled;
+  const settings = cspCheckSettings.value as Record<
+    string,
+    {
+      enabled: boolean;
+      name: string;
+      category: string;
+      severity: string;
+      description: string;
+    }
+  >;
+  if (settings[checkId]) {
+    settings[checkId].enabled = enabled;
+  }
 };
 
 const getCheckEnabled = (checkId: string): boolean => {
@@ -1972,7 +1986,7 @@ const getCheckEnabled = (checkId: string): boolean => {
             <div class="space-y-2">
               <div
                 v-for="vuln in selectedAnalysisForModal.vulnerabilities.filter(
-                  (v) => v.id !== selectedVulnerability.id,
+                  (v) => v.id !== selectedVulnerability?.id,
                 )"
                 :key="vuln.id"
                 class="flex items-center gap-3 p-2 bg-gray-50 dark:bg-gray-800 rounded cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
