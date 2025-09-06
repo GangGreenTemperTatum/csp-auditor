@@ -5,6 +5,9 @@ on:
     branches:
       - 'main'
   workflow_call:
+  pull_request:
+    branches:
+      - 'main'
 
 concurrency:
   group: validate-${{ github.ref_name }}
