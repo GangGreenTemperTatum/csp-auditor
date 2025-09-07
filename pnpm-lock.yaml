@@ -51,8 +51,8 @@ importers:
   packages/frontend:
     dependencies:
       '@caido/primevue':
-        specifier: 0.1.2
-        version: 0.1.2
+        specifier: 0.3.0
+        version: 0.3.0(primevue@4.1.0(vue@3.4.37(typescript@5.5.4)))
       primevue:
         specifier: 4.1.0
         version: 4.1.0(vue@3.4.37(typescript@5.5.4))
@@ -113,8 +113,10 @@ packages:
   '@caido/plugin-manifest@0.3.0':
     resolution: {integrity: sha512-HRGHf65K2sfSdaEUwkCNDlurJ4zL0bOUg/Db4u6CrwjTTzmg2gOzP6SzLRj+69gWmxOm5LUjhInNHaMIRmQkHw==}
 
-  '@caido/primevue@0.1.2':
-    resolution: {integrity: sha512-PCv6qyvlWEKB97PLRzPHDjs7ZGW5JQrD6jvJiMEiprfu4IR5/dXiqRJ4M5g293qn+RAffBuiXcna0vWSxrg5lQ==}
+  '@caido/primevue@0.3.0':
+    resolution: {integrity: sha512-Tcb+MPjqwOtpUBlT7MLNYm70Zheremt9+zS0OwIULNeJi9/nwry8sV8d6H17kaZEC85u7C05oO5s06hDa4QOLg==}
+    peerDependencies:
+      primevue: 4.1.0
 
   '@caido/quickjs-types@0.17.2':
     resolution: {integrity: sha512-5kcucGORMNEbcdU91yKLYZG/TFDqsO6XmCZ1TnU6V48E61mmqrJg6kjrfOFP1WOugDm+ZcGd/Su3p3XkFXfaPg==}
@@ -2047,6 +2049,7 @@ packages:
   source-map@0.8.0-beta.0:
     resolution: {integrity: sha512-2ymg6oRBpebeZi9UUNsgQ89bhx01TcTkmNTGnNO88imTmbSgy4nfujrgVEFKWpMTEGA11EDkTt7mqObTPdigIA==}
     engines: {node: '>= 8'}
+    deprecated: The work that was done in this beta branch won't be included in future versions
 
   statuses@2.0.1:
     resolution: {integrity: sha512-RwNA9Z/7PrK06rYLIzFMlaF+l73iwpzsqRIFgbMLbTcLD6cOao82TaWefPXQvB2fOC4AjuYSEndS7N/mTCbkdQ==}
@@ -2474,7 +2477,9 @@ snapshots:
     dependencies:
       ajv: 8.17.1
 
-  '@caido/primevue@0.1.2': {}
+  '@caido/primevue@0.3.0(primevue@4.1.0(vue@3.4.37(typescript@5.5.4)))':
+    dependencies:
+      primevue: 4.1.0(vue@3.4.37(typescript@5.5.4))
 
   '@caido/quickjs-types@0.17.2': {}
 
