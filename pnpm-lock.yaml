@@ -65,10 +65,10 @@ importers:
         version: 0.51.1
       '@caido/sdk-frontend':
         specifier: ^0.51.0
-        version: 0.51.1(@codemirror/state@6.5.2)(@codemirror/view@6.38.2)(vue@3.5.21(typescript@5.9.2))
+        version: 0.51.1(@codemirror/state@6.5.2)(@codemirror/view@6.38.3)(vue@3.5.21(typescript@5.9.2))
       '@codemirror/view':
-        specifier: 6.38.2
-        version: 6.38.2
+        specifier: 6.38.3
+        version: 6.38.3
       backend:
         specifier: workspace:*
         version: link:../backend
@@ -138,8 +138,8 @@ packages:
   '@codemirror/state@6.5.2':
     resolution: {integrity: sha512-FVqsPqtPWKVVL3dPSxy8wEF/ymIEuVzF1PK3VbUgrxXpJUSHQWWZz4JMToquRxnkw+36LTamCZG2iua2Ptq0fA==}
 
-  '@codemirror/view@6.38.2':
-    resolution: {integrity: sha512-bTWAJxL6EOFLPzTx+O5P5xAO3gTqpatQ2b/ARQ8itfU/v2LlpS3pH2fkL0A3E/Fx8Y2St2KES7ZEV0sHTsSW/A==}
+  '@codemirror/view@6.38.3':
+    resolution: {integrity: sha512-x2t87+oqwB1mduiQZ6huIghjMt4uZKFEdj66IcXw7+a5iBEvv9lh7EWDRHI7crnD4BMGpnyq/RzmCGbiEZLcvQ==}
 
   '@esbuild/aix-ppc64@0.24.2':
     resolution: {integrity: sha512-thpVCb/rhxE/BnMLQ7GReQLLN8q9qbHmI55F4489/ByVg2aQaQ6kbcLb6FHkocZzQhxc4gx0sCk0tJkKBFzDhA==}
@@ -2495,10 +2495,10 @@ snapshots:
       '@caido/quickjs-types': 0.20.0
       '@caido/sdk-shared': 0.1.1
 
-  '@caido/sdk-frontend@0.51.1(@codemirror/state@6.5.2)(@codemirror/view@6.38.2)(vue@3.5.21(typescript@5.9.2))':
+  '@caido/sdk-frontend@0.51.1(@codemirror/state@6.5.2)(@codemirror/view@6.38.3)(vue@3.5.21(typescript@5.9.2))':
     dependencies:
       '@codemirror/state': 6.5.2
-      '@codemirror/view': 6.38.2
+      '@codemirror/view': 6.38.3
       vue: 3.5.21(typescript@5.9.2)
 
   '@caido/sdk-shared@0.1.1': {}
@@ -2513,7 +2513,7 @@ snapshots:
     dependencies:
       '@marijn/find-cluster-break': 1.0.2
 
-  '@codemirror/view@6.38.2':
+  '@codemirror/view@6.38.3':
     dependencies:
       '@codemirror/state': 6.5.2
       crelt: 1.0.6
