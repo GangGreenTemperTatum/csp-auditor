@@ -42,8 +42,8 @@ importers:
   packages/backend:
     devDependencies:
       '@caido/sdk-backend':
-        specifier: ^0.51.0
-        version: 0.51.1
+        specifier: ^0.52.0
+        version: 0.52.0
       '@types/node':
         specifier: ^24.3.1
         version: 24.5.2
@@ -61,11 +61,11 @@ importers:
         version: 3.5.21(typescript@5.9.2)
     devDependencies:
       '@caido/sdk-backend':
-        specifier: ^0.51.0
-        version: 0.51.1
+        specifier: ^0.52.0
+        version: 0.52.0
       '@caido/sdk-frontend':
-        specifier: ^0.51.0
-        version: 0.51.1(@codemirror/state@6.5.2)(@codemirror/view@6.38.3)(vue@3.5.21(typescript@5.9.2))
+        specifier: ^0.52.0
+        version: 0.52.0(@ai-sdk/provider@2.0.0)(@codemirror/state@6.5.2)(@codemirror/view@6.38.3)(vue@3.5.21(typescript@5.9.2))
       '@codemirror/view':
         specifier: 6.38.3
         version: 6.38.3
@@ -77,6 +77,10 @@ importers:
         version: 2.2.12(typescript@5.9.2)
 
 packages:
+
+  '@ai-sdk/provider@2.0.0':
+    resolution: {integrity: sha512-6o7Y2SeO9vFKB8lArHXehNuusnpddKPk7xqL7T2/b+OvXMRIXUO1rR4wcv1hAFUAT9avGZshty3Wlua/XA7TvA==}
+    engines: {node: '>=18'}
 
   '@alloc/quick-lru@5.2.0':
     resolution: {integrity: sha512-UrcABB+4bUrFABwbluTIBErXwvbsU/V7TZWfmbgJfbkwiBuziS9gxdODUyuiecfdGQ85jglMW6juS3+z5TsKLw==}
@@ -116,15 +120,16 @@ packages:
   '@caido/primevue@0.1.2':
     resolution: {integrity: sha512-PCv6qyvlWEKB97PLRzPHDjs7ZGW5JQrD6jvJiMEiprfu4IR5/dXiqRJ4M5g293qn+RAffBuiXcna0vWSxrg5lQ==}
 
-  '@caido/quickjs-types@0.20.0':
-    resolution: {integrity: sha512-T3OTw3GjGPtMxASFHZro86Jce+9TVNNbUz2fQCaCbP+Yh+olt5mwTMLNz8uLFo4icgc1WPfyimfFSN23za9UXw==}
+  '@caido/quickjs-types@0.21.1':
+    resolution: {integrity: sha512-efLd1W92xun+E8/hdLBJD+pdDdf7TQ85zI28ZyYP3EfiQljq5zOyt9Sco45oWHyDGxvezUXeyee/NJ0NWxv3hg==}
 
-  '@caido/sdk-backend@0.51.1':
-    resolution: {integrity: sha512-BvDCcbxXCDcsCvqntpeoKJ475DUZ7H7TXZjIPcoa5WU+ynBpvnDpeoxVoy1UBYQKz9L5ld8MQ3S5oY9wEoNHqQ==}
+  '@caido/sdk-backend@0.52.0':
+    resolution: {integrity: sha512-LRVM5RbkWbNhTSpNuqE8ALjZmPmZLo7JyalCTp6tHcMDwVOw1C2Weg8kKG48CltmEkoVqPoNpf+2qtX1JdNjLQ==}
 
-  '@caido/sdk-frontend@0.51.1':
-    resolution: {integrity: sha512-mop5Fk5Gv9cxm/BGaO6T1NxJHXPqDU6adIrWKjnWOhZnuqOfH+DxU8TpI+k+IRgtPJkmOv4NqfGPx7axLHhM5A==}
+  '@caido/sdk-frontend@0.52.0':
+    resolution: {integrity: sha512-ZNBkY6AhfxNNb8UbhbWN8xuX4LNyzc7EBEhCdhmIt5G8bNr9cxS3xY9/FLbZSxx1rtnrK/xEfpKoYzQv5EegDA==}
     peerDependencies:
+      '@ai-sdk/provider': ^2.0.0
       '@codemirror/state': ^6.0.0
       '@codemirror/view': ^6.0.0
       vue: ^3.0.0
@@ -1530,6 +1535,9 @@ packages:
   json-schema-traverse@1.0.0:
     resolution: {integrity: sha512-NM8/P9n3XjXhIZn1lLhkFaACTOURQXjWhV4BA/RnOv8xvgqtqpAX9IO4mRQxSx1Rlo4tqzeqb0sOlruaOy3dug==}
 
+  json-schema@0.4.0:
+    resolution: {integrity: sha512-es94M3nTIfsEPisRafak+HDLfHXnKBhV3vU5eqPcS3flIWqcxJWgXHXiey3YrpaNsanY5ei1VoYEbOzijuq9BA==}
+
   json-stable-stringify-without-jsonify@1.0.1:
     resolution: {integrity: sha512-Bdboy+l7tA3OGW6FjyFHWkP5LuByj1Tk33Ljyq0axyzdk9//JSi2u3fP1QSmd1KNwq6VOKYGlAu87CisVir6Pw==}
 
@@ -2412,6 +2420,10 @@ packages:
 
 snapshots:
 
+  '@ai-sdk/provider@2.0.0':
+    dependencies:
+      json-schema: 0.4.0
+
   '@alloc/quick-lru@5.2.0': {}
 
   '@babel/helper-string-parser@7.27.1': {}
@@ -2488,15 +2500,16 @@ snapshots:
 
   '@caido/primevue@0.1.2': {}
 
-  '@caido/quickjs-types@0.20.0': {}
+  '@caido/quickjs-types@0.21.1': {}
 
-  '@caido/sdk-backend@0.51.1':
+  '@caido/sdk-backend@0.52.0':
     dependencies:
-      '@caido/quickjs-types': 0.20.0
+      '@caido/quickjs-types': 0.21.1
       '@caido/sdk-shared': 0.1.1
 
-  '@caido/sdk-frontend@0.51.1(@codemirror/state@6.5.2)(@codemirror/view@6.38.3)(vue@3.5.21(typescript@5.9.2))':
+  '@caido/sdk-frontend@0.52.0(@ai-sdk/provider@2.0.0)(@codemirror/state@6.5.2)(@codemirror/view@6.38.3)(vue@3.5.21(typescript@5.9.2))':
     dependencies:
+      '@ai-sdk/provider': 2.0.0
       '@codemirror/state': 6.5.2
       '@codemirror/view': 6.38.3
       vue: 3.5.21(typescript@5.9.2)
@@ -4007,6 +4020,8 @@ snapshots:
   json-schema-traverse@0.4.1: {}
 
   json-schema-traverse@1.0.0: {}
+
+  json-schema@0.4.0: {}
 
   json-stable-stringify-without-jsonify@1.0.1: {}
 
