@@ -10,7 +10,7 @@ importers:
     devDependencies:
       '@caido-community/dev':
         specifier: ^0.1.3
-        version: 0.1.6(@types/node@24.6.0)(postcss@8.5.6)(typescript@5.9.2)(yaml@2.8.1)
+        version: 0.1.6(@types/node@24.6.2)(postcss@8.5.6)(typescript@5.9.2)(yaml@2.8.1)
       '@caido/eslint-config':
         specifier: ^0.6.0
         version: 0.6.0(@typescript-eslint/parser@8.26.1(eslint@9.36.0(jiti@2.4.2))(typescript@5.9.2))(eslint@9.36.0(jiti@2.4.2))(prettier@3.6.2)(typescript@5.9.2)
@@ -19,7 +19,7 @@ importers:
         version: 0.0.1
       '@vitejs/plugin-vue':
         specifier: 5.2.4
-        version: 5.2.4(vite@6.0.7(@types/node@24.6.0)(jiti@2.4.2)(yaml@2.8.1))(vue@3.5.21(typescript@5.9.2))
+        version: 5.2.4(vite@6.0.7(@types/node@24.6.2)(jiti@2.4.2)(yaml@2.8.1))(vue@3.5.21(typescript@5.9.2))
       eslint:
         specifier: ^9.35.0
         version: 9.36.0(jiti@2.4.2)
@@ -46,7 +46,7 @@ importers:
         version: 0.51.1
       '@types/node':
         specifier: ^24.3.1
-        version: 24.6.0
+        version: 24.6.2
 
   packages/frontend:
     dependencies:
@@ -540,8 +540,8 @@ packages:
   '@types/json5@0.0.29':
     resolution: {integrity: sha512-dRLjCWHYg4oaA77cxO64oO+7JwCwnIzkZPdrrC71jQmQtlhM556pwKo5bUzqvZndkVbeFLIIi+9TC40JNF5hNQ==}
 
-  '@types/node@24.6.0':
-    resolution: {integrity: sha512-F1CBxgqwOMc4GKJ7eY22hWhBVQuMYTtqI8L0FcszYcpYX0fzfDGpez22Xau8Mgm7O9fI+zA/TYIdq3tGWfweBA==}
+  '@types/node@24.6.2':
+    resolution: {integrity: sha512-d2L25Y4j+W3ZlNAeMKcy7yDsK425ibcAOO2t7aPTz6gNMH0z2GThtwENCDc0d/Pw9wgyRqE5Px1wkV7naz8ang==}
 
   '@typescript-eslint/eslint-plugin@8.26.1':
     resolution: {integrity: sha512-2X3mwqsj9Bd3Ciz508ZUtoQQYpOhU/kWoUqIf49H8Z0+Vbh6UF/y0OEYp0Q0axOGzaBGs7QxRwq0knSQ8khQNA==}
@@ -2427,7 +2427,7 @@ snapshots:
       '@babel/helper-string-parser': 7.27.1
       '@babel/helper-validator-identifier': 7.27.1
 
-  '@caido-community/dev@0.1.6(@types/node@24.6.0)(postcss@8.5.6)(typescript@5.9.2)(yaml@2.8.1)':
+  '@caido-community/dev@0.1.6(@types/node@24.6.2)(postcss@8.5.6)(typescript@5.9.2)(yaml@2.8.1)':
     dependencies:
       '@caido/plugin-manifest': 0.3.0
       chalk: 5.4.1
@@ -2438,7 +2438,7 @@ snapshots:
       jiti: 2.4.2
       jszip: 3.10.1
       tsup: 8.3.5(jiti@2.4.2)(postcss@8.5.6)(typescript@5.9.2)(yaml@2.8.1)
-      vite: 6.0.7(@types/node@24.6.0)(jiti@2.4.2)(yaml@2.8.1)
+      vite: 6.0.7(@types/node@24.6.2)(jiti@2.4.2)(yaml@2.8.1)
       ws: 8.18.0
       zod: 3.24.1
     transitivePeerDependencies:
@@ -2795,7 +2795,7 @@ snapshots:
 
   '@types/json5@0.0.29': {}
 
-  '@types/node@24.6.0':
+  '@types/node@24.6.2':
     dependencies:
       undici-types: 7.13.0
 
@@ -2876,9 +2876,9 @@ snapshots:
       '@typescript-eslint/types': 8.26.1
       eslint-visitor-keys: 4.2.1
 
-  '@vitejs/plugin-vue@5.2.4(vite@6.0.7(@types/node@24.6.0)(jiti@2.4.2)(yaml@2.8.1))(vue@3.5.21(typescript@5.9.2))':
+  '@vitejs/plugin-vue@5.2.4(vite@6.0.7(@types/node@24.6.2)(jiti@2.4.2)(yaml@2.8.1))(vue@3.5.21(typescript@5.9.2))':
     dependencies:
-      vite: 6.0.7(@types/node@24.6.0)(jiti@2.4.2)(yaml@2.8.1)
+      vite: 6.0.7(@types/node@24.6.2)(jiti@2.4.2)(yaml@2.8.1)
       vue: 3.5.21(typescript@5.9.2)
 
   '@volar/language-core@2.4.15':
@@ -4843,13 +4843,13 @@ snapshots:
 
   vary@1.1.2: {}
 
-  vite@6.0.7(@types/node@24.6.0)(jiti@2.4.2)(yaml@2.8.1):
+  vite@6.0.7(@types/node@24.6.2)(jiti@2.4.2)(yaml@2.8.1):
     dependencies:
       esbuild: 0.24.2
       postcss: 8.5.6
       rollup: 4.52.0
     optionalDependencies:
-      '@types/node': 24.6.0
+      '@types/node': 24.6.2
       fsevents: 2.3.3
       jiti: 2.4.2
       yaml: 2.8.1
