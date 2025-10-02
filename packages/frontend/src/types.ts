@@ -18,6 +18,10 @@ export interface FrontendSDK {
     setCspCheckSettings: (settings: Record<string, boolean>) => Promise<void>;
     updateCspCheckSetting: (checkId: string, enabled: boolean) => Promise<void>;
     getBypassDatabase: () => Promise<BypassEntry[]>;
+    onEvent: (
+      event: "analysisUpdated",
+      callback: () => void,
+    ) => { stop: () => void };
   };
 }
 

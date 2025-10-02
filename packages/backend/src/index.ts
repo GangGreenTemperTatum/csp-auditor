@@ -1,5 +1,5 @@
 /* eslint-disable compat/compat */
-import type { DefineAPI, SDK } from "caido:plugin";
+import type { DefineAPI, DefineEvents, SDK } from "caido:plugin";
 import type { Request } from "caido:utils";
 
 import { getBypassCount, getCSPBypassData } from "./bypass-database";
@@ -243,15 +243,16 @@ const exportCspFindings = async (
   }
 };
 
-const clearCspCache = (sdk: SDK): Promise<void> => {
+const clearCspCache = (sdk: SDK<API, Events>): Promise<void> => {
   const count = analysisCache.size;
   analysisCache.clear();
   sdk.console.log(`Cleared CSP analysis cache (${count} entries)`);
+  sdk.api.send("analysisUpdated");
   return Promise.resolve();
 };
 
 const processWorkflowCspAnalysis = async (
-  sdk: SDK,
+  sdk: SDK<API, Events>,
   requestData: { id: string; host: string; path: string },
   responseData: { headers: Record<string, string[]> },
   request?: unknown,
@@ -297,6 +298,8 @@ const processWorkflowCspAnalysis = async (
     sdk.console.log(
       `CSP Analysis complete: ${allVulnerabilities.length} vulnerabilities found, createFindings: ${createFindings}`,
     );
+
+    sdk.api.send("analysisUpdated");
 
     if (
       createFindings === true &&
@@ -462,6 +465,10 @@ const detectTechnique = (code: string): string => {
   return "XSS";
 };
 
+export type Events = DefineEvents<{
+  analysisUpdated: () => void;
+}>;
+
 export type API = DefineAPI<{
   analyzeCspHeaders: typeof analyzeCspHeaders;
   getCspAnalysis: typeof getCspAnalysis;
@@ -480,7 +487,7 @@ export type API = DefineAPI<{
   getBypassDatabase: typeof getBypassDatabase;
 }>;
 
-export function init(sdk: SDK<API>) {
+export function init(sdk: SDK<API, Events>) {
   sdk.api.register("analyzeCspHeaders", analyzeCspHeaders);
   sdk.api.register("getCspAnalysis", getCspAnalysis);
   sdk.api.register("getAllCspAnalyses", getAllCspAnalyses);

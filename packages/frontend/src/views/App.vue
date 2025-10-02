@@ -51,8 +51,7 @@ const currentPage = ref(1);
 const itemsPerPage = ref(10);
 
 const autoRefreshEnabled = ref(true);
-const refreshInterval = ref<number | undefined>(undefined);
-const REFRESH_INTERVAL_MS = 5000;
+let eventSubscription: { stop: () => void } | undefined;
 
 const respectScope = ref(true);
 const createFindings = ref(false);
@@ -234,7 +233,9 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
-  stopAutoRefresh();
+  if (eventSubscription) {
+    eventSubscription.stop();
+  }
 });
 
 // Watch for individual setting changes and save to backend
@@ -302,35 +303,19 @@ const refreshData = async () => {
 };
 
 const startAutoRefresh = () => {
-  if (
-    autoRefreshEnabled.value === true &&
-    refreshInterval.value === undefined
-  ) {
-    refreshInterval.value = window.setInterval(async () => {
-      if (autoRefreshEnabled.value && !loading.value) {
-        const currentTotalAnalyses = stats.value.totalAnalyses;
-
-        try {
-          const [newStats] = await Promise.all([sdk.backend.getCspStats()]);
-
-          if (
-            typeof newStats.totalAnalyses === "number" &&
-            newStats.totalAnalyses !== currentTotalAnalyses
-          ) {
-            await loadDashboardData();
-          }
-        } catch (error) {
-          console.error("Auto-refresh failed:", error);
-        }
+  if (autoRefreshEnabled.value && !eventSubscription) {
+    eventSubscription = sdk.backend.onEvent("analysisUpdated", async () => {
+      if (!loading.value) {
+        await loadDashboardData();
       }
-    }, REFRESH_INTERVAL_MS);
+    });
   }
 };
 
 const stopAutoRefresh = () => {
-  if (refreshInterval.value !== undefined) {
-    window.clearInterval(refreshInterval.value);
-    refreshInterval.value = undefined;
+  if (eventSubscription) {
+    eventSubscription.stop();
+    eventSubscription = undefined;
   }
 };
 
@@ -843,7 +828,7 @@ const getCheckEnabled = (checkId: string): boolean => {
           size="small"
           :title="
             autoRefreshEnabled
-              ? 'Auto-refresh every 5 seconds - Click to disable'
+              ? 'Auto-refresh on analysis updates - Click to disable'
               : 'Auto-refresh disabled - Click to enable'
           "
           @click="toggleAutoRefresh"
