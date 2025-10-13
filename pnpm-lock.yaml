@@ -65,10 +65,10 @@ importers:
         version: 0.52.0
       '@caido/sdk-frontend':
         specifier: ^0.52.0
-        version: 0.52.0(@ai-sdk/provider@2.0.0)(@codemirror/state@6.5.2)(@codemirror/view@6.38.4)(vue@3.5.21(typescript@5.9.3))
+        version: 0.52.0(@ai-sdk/provider@2.0.0)(@codemirror/state@6.5.2)(@codemirror/view@6.38.6)(vue@3.5.21(typescript@5.9.3))
       '@codemirror/view':
-        specifier: 6.38.4
-        version: 6.38.4
+        specifier: 6.38.6
+        version: 6.38.6
       backend:
         specifier: workspace:*
         version: link:../backend
@@ -145,8 +145,8 @@ packages:
   '@codemirror/state@6.5.2':
     resolution: {integrity: sha512-FVqsPqtPWKVVL3dPSxy8wEF/ymIEuVzF1PK3VbUgrxXpJUSHQWWZz4JMToquRxnkw+36LTamCZG2iua2Ptq0fA==}
 
-  '@codemirror/view@6.38.4':
-    resolution: {integrity: sha512-hduz0suCcUSC/kM8Fq3A9iLwInJDl8fD1xLpTIk+5xkNm8z/FT7UsIa9sOXrkpChh+XXc18RzswE8QqELsVl+g==}
+  '@codemirror/view@6.38.6':
+    resolution: {integrity: sha512-qiS0z1bKs5WOvHIAC0Cybmv4AJSkAXgX5aD6Mqd2epSLlVJsQl8NG23jCVouIgkh4All/mrbdsf2UOLFnJw0tw==}
 
   '@esbuild/aix-ppc64@0.24.2':
     resolution: {integrity: sha512-thpVCb/rhxE/BnMLQ7GReQLLN8q9qbHmI55F4489/ByVg2aQaQ6kbcLb6FHkocZzQhxc4gx0sCk0tJkKBFzDhA==}
@@ -2520,11 +2520,11 @@ snapshots:
       '@caido/quickjs-types': 0.21.1
       '@caido/sdk-shared': 0.1.1
 
-  '@caido/sdk-frontend@0.52.0(@ai-sdk/provider@2.0.0)(@codemirror/state@6.5.2)(@codemirror/view@6.38.4)(vue@3.5.21(typescript@5.9.3))':
+  '@caido/sdk-frontend@0.52.0(@ai-sdk/provider@2.0.0)(@codemirror/state@6.5.2)(@codemirror/view@6.38.6)(vue@3.5.21(typescript@5.9.3))':
     dependencies:
       '@ai-sdk/provider': 2.0.0
       '@codemirror/state': 6.5.2
-      '@codemirror/view': 6.38.4
+      '@codemirror/view': 6.38.6
       vue: 3.5.21(typescript@5.9.3)
 
   '@caido/sdk-shared@0.1.1': {}
@@ -2539,7 +2539,7 @@ snapshots:
     dependencies:
       '@marijn/find-cluster-break': 1.0.2
 
-  '@codemirror/view@6.38.4':
+  '@codemirror/view@6.38.6':
     dependencies:
       '@codemirror/state': 6.5.2
       crelt: 1.0.6
