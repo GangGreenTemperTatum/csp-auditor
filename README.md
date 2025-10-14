@@ -18,11 +18,10 @@ _Hack the planet 🤘_
 [Request Feature](https://github.com/GangGreenTemperTatum/csp-auditor/issues)
 
 ![csp-auditor main panel](./assets/public/csp-auditor-main-panel.png)
-<div align="center"><i>csp-auditor main panel</i></div>
 
-<!--CSP Auditor is now available via the [Caido Plugin Library](https://caido.io/plugins)! 🥳 CSP Auditor was [submitted to the Caido Plugin Library](https://github.com/caido/store/pull/41) and is approved, it will be available for installation directly from the Caido plugin store page.-->
+CSP Auditor is now available via the [Caido Plugin Library](https://caido.io/plugins)! 🥳 CSP Auditor was [submitted to the Caido Plugin Library](https://github.com/caido/store/pull/41) and is approved, it will be available for installation directly from the Caido plugin store page.
 
-<!--![https://caido.io/plugins](./public/images/caido-plugin-store.png)-->
+[https://caido.io/plugins](./public/images/caido-plugin-store.png)
 
 </div>
 
