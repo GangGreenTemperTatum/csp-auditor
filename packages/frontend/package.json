@@ -8,7 +8,7 @@
   "dependencies": {
     "@caido/primevue": "0.3.3",
     "primevue": "4.1.0",
-    "vue": "3.5.24"
+    "vue": "3.5.25"
   },
   "devDependencies": {
     "@caido/sdk-backend": "^0.52.0",
