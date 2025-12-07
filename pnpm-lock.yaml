@@ -12,8 +12,8 @@ importers:
         specifier: ^0.1.3
         version: 0.1.6(@types/node@24.10.1)(postcss@8.5.6)(typescript@5.9.3)(yaml@2.8.1)
       '@caido/eslint-config':
-        specifier: ^0.7.0
-        version: 0.7.0(@typescript-eslint/parser@8.26.1(eslint@9.39.1(jiti@1.21.7))(typescript@5.9.3))(eslint@9.39.1(jiti@1.21.7))(prettier@3.6.2)(typescript@5.9.3)
+        specifier: ^0.8.0
+        version: 0.8.0(@typescript-eslint/parser@8.26.1(eslint@9.39.1(jiti@1.21.7))(typescript@5.9.3))(eslint@9.39.1(jiti@1.21.7))(prettier@3.6.2)(typescript@5.9.3)
       '@caido/tailwindcss':
         specifier: 0.0.1
         version: 0.0.1
@@ -108,8 +108,8 @@ packages:
     engines: {node: '>=20', pnpm: '>=9'}
     hasBin: true
 
-  '@caido/eslint-config@0.7.0':
-    resolution: {integrity: sha512-vMnPLYYLSktJJgL5Sc0FqgwbI22oOnFe5RfmGWdM08QDE6JglnoSj2sXlqmfYPL03aHp+LRdvyZaMcxkC9jsDA==}
+  '@caido/eslint-config@0.8.0':
+    resolution: {integrity: sha512-ps4beOseZwQfAC0/ckjyDc8YXCAsD4NDajrDAXkwec7NKd1Hf5TNFtByGDGVOoVreiL3a3UiN5WFgvfDspxtwg==}
     peerDependencies:
       eslint: '>=9.0.0'
       prettier: ^3.0.0
@@ -2483,7 +2483,7 @@ snapshots:
       - utf-8-validate
       - yaml
 
-  '@caido/eslint-config@0.7.0(@typescript-eslint/parser@8.26.1(eslint@9.39.1(jiti@1.21.7))(typescript@5.9.3))(eslint@9.39.1(jiti@1.21.7))(prettier@3.6.2)(typescript@5.9.3)':
+  '@caido/eslint-config@0.8.0(@typescript-eslint/parser@8.26.1(eslint@9.39.1(jiti@1.21.7))(typescript@5.9.3))(eslint@9.39.1(jiti@1.21.7))(prettier@3.6.2)(typescript@5.9.3)':
     dependencies:
       '@eslint/js': 9.17.0
       eslint: 9.39.1(jiti@1.21.7)
@@ -4503,7 +4503,7 @@ snapshots:
 
   send@1.2.0:
     dependencies:
-      debug: 4.3.6
+      debug: 4.4.3
       encodeurl: 2.0.0
       escape-html: 1.0.3
       etag: 1.8.1
