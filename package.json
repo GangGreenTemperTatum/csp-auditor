@@ -5,7 +5,9 @@
   "scripts": {
     "typecheck": "pnpm -r typecheck",
     "lint": "eslint ./packages/**/src --fix",
+    "prebuild": "node scripts/generate-bypass-data.js",
     "build": "caido-dev build",
+    "prewatch": "node scripts/generate-bypass-data.js",
     "watch": "caido-dev watch"
   },
   "devDependencies": {
