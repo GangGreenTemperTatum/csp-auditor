@@ -1,11 +1,13 @@
 {
   "name": "csp-auditor",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "private": true,
   "scripts": {
     "typecheck": "pnpm -r typecheck",
     "lint": "eslint ./packages/**/src --fix",
+    "prebuild": "node scripts/generate-bypass-data.js",
     "build": "caido-dev build",
+    "prewatch": "node scripts/generate-bypass-data.js",
     "watch": "caido-dev watch"
   },
   "devDependencies": {

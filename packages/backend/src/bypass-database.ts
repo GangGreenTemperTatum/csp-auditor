@@ -1,60 +1,16 @@
-// CSP bypass database generated from data/csp-bypass-data.tsv
-// This file is auto-generated - do not edit manually
+// CSP bypass database - uses generated data from data/csp-bypass-data.tsv
+// The data is inlined at build time via scripts/generate-bypass-data.js
 
-import { readFileSync } from "fs";
-import { dirname, join } from "path";
-import { fileURLToPath } from "url";
-
-let cachedData: string | undefined = undefined;
-let cachedCount: number | undefined = undefined;
+import { CSP_BYPASS_TSV_DATA, BYPASS_ENTRY_COUNT } from "./bypass-data.generated";
 
 export const getCSPBypassData = (): string => {
-  if (cachedData === undefined) {
-    try {
-      // Read the TSV file from the project root
-      const tsvPath = join(process.cwd(), "data", "csp-bypass-data.tsv");
-      cachedData = readFileSync(tsvPath, "utf-8");
-    } catch (error) {
-      // Fallback to relative paths
-      try {
-        const currentDir = dirname(fileURLToPath(import.meta.url));
-        const tsvPath = join(
-          currentDir,
-          "..",
-          "..",
-          "..",
-          "data",
-          "csp-bypass-data.tsv",
-        );
-        cachedData = readFileSync(tsvPath, "utf-8");
-      } catch (fallbackError) {
-        // Final fallback to absolute path
-        try {
-          cachedData = readFileSync(
-            "/Users/ads/git/csp-auditor/data/csp-bypass-data.tsv",
-            "utf-8",
-          );
-        } catch (finalError) {
-          console.error(
-            "Failed to load TSV data from all paths: " + String(finalError),
-          );
-          cachedData = "Domain\tCode\n"; // Empty TSV with header
-        }
-      }
-    }
-  }
-  return cachedData;
+  return CSP_BYPASS_TSV_DATA;
 };
 
 export const getBypassCount = (): number => {
-  if (cachedCount === undefined) {
-    const data = getCSPBypassData();
-    const lines = data.trim().split("\n");
-    cachedCount = Math.max(0, lines.length - 1); // Subtract 1 for header
-  }
-  return cachedCount;
+  return BYPASS_ENTRY_COUNT;
 };
 
 // Legacy exports for backward compatibility
-export const CSP_BYPASS_DATA = getCSPBypassData();
-export const BYPASS_COUNT = getBypassCount();
+export const CSP_BYPASS_DATA = CSP_BYPASS_TSV_DATA;
+export const BYPASS_COUNT = BYPASS_ENTRY_COUNT;

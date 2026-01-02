@@ -18,6 +18,9 @@ out/
 *.build.js
 *.build.js.map
 
+# Generated files
+packages/backend/src/bypass-data.generated.ts
+
 # Runtime data
 pids
 *.pid
