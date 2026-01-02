@@ -12,7 +12,7 @@ export default defineConfig({
   id,
   name: "CSP Auditor",
   description: "Comprehensive Content Security Policy analysis and vulnerability detection plugin for Caido",
-  version: "1.0.1",
+  version: "1.0.2",
   author: {
     name: "Ads Dawson",
     email: "ads@offsecmoose.xyz",
