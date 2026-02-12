@@ -15,8 +15,8 @@ importers:
         specifier: ^0.8.0
         version: 0.8.0(@typescript-eslint/parser@8.26.1(eslint@10.0.0(jiti@1.21.7))(typescript@5.9.3))(eslint@10.0.0(jiti@1.21.7))(prettier@3.7.4)(typescript@5.9.3)
       '@caido/tailwindcss':
-        specifier: 0.0.1
-        version: 0.0.1
+        specifier: 0.1.0
+        version: 0.1.0
       '@vitejs/plugin-vue':
         specifier: 5.2.4
         version: 5.2.4(vite@6.0.7(@types/node@24.10.11)(jiti@1.21.7)(yaml@2.8.2))(vue@3.5.26(typescript@5.9.3))
@@ -25,7 +25,7 @@ importers:
         version: 10.0.0(jiti@1.21.7)
       lodash:
         specifier: ^4.17.21
-        version: 4.17.21
+        version: 4.17.23
       postcss-prefixwrap:
         specifier: 1.57.2
         version: 1.57.2(postcss@8.5.6)
@@ -42,8 +42,8 @@ importers:
   packages/backend:
     devDependencies:
       '@caido/sdk-backend':
-        specifier: ^0.54.0
-        version: 0.54.1
+        specifier: ^0.55.0
+        version: 0.55.3
       '@types/node':
         specifier: ^24.3.1
         version: 24.10.11
@@ -61,14 +61,14 @@ importers:
         version: 3.5.26(typescript@5.9.3)
     devDependencies:
       '@caido/sdk-backend':
-        specifier: ^0.54.0
-        version: 0.54.1
+        specifier: ^0.55.0
+        version: 0.55.3
       '@caido/sdk-frontend':
-        specifier: ^0.54.0
-        version: 0.54.1(@ai-sdk/provider@2.0.0)(@codemirror/state@6.5.2)(@codemirror/view@6.39.8)(vue@3.5.26(typescript@5.9.3))
+        specifier: ^0.55.0
+        version: 0.55.3(@ai-sdk/provider@2.0.0)(@codemirror/state@6.5.2)(@codemirror/view@6.39.14)(vue@3.5.26(typescript@5.9.3))
       '@codemirror/view':
-        specifier: 6.39.8
-        version: 6.39.8
+        specifier: 6.39.14
+        version: 6.39.14
       backend:
         specifier: workspace:*
         version: link:../backend
@@ -122,16 +122,16 @@ packages:
     peerDependencies:
       primevue: 4.1.0
 
-  '@caido/quickjs-types@0.24.0':
-    resolution: {integrity: sha512-BKkvkVbaZtm9b3qp2R0T4gp0dExstuExIlRaKQSnC5RgATsR+mEQUU0TK8oFjJwCCQsdVoSkQGnDnK8XeaCfHA==}
+  '@caido/quickjs-types@0.25.4':
+    resolution: {integrity: sha512-U7Cvi4aHoCN8T2JB+Az3ArqQ3MUK0PRCtBm5Sq1rfqaJ9NymAkh3O29q77Keh3G/zINq2WTkKZq5qJlvrQNl+Q==}
 
-  '@caido/sdk-backend@0.54.1':
-    resolution: {integrity: sha512-YNIKIYYINMl5e6fdcITB+50LPjLw+m1B6PAKDOTcdNo+KIbYliQqzJptsQiz/vggcnuWmirablWwR+vRB4ohqA==}
+  '@caido/sdk-backend@0.55.3':
+    resolution: {integrity: sha512-kOrkBtmu8U0qo4kJje7C0BOO9PWf7skKAJM77bVeWJ6aIkxsnBzRyxVxdaD77UbKK3oVT5xUgSx62Ns3xjzSEw==}
 
-  '@caido/sdk-frontend@0.54.1':
-    resolution: {integrity: sha512-juLWVTTAb8Klcyafs1t8M4hhD9gNNDsm9XnMMEW3GO96upW/JIZjRZH3IHbD5CL4ihvjL34BznHKHm2P3ZG3aw==}
+  '@caido/sdk-frontend@0.55.3':
+    resolution: {integrity: sha512-ALKnwVAaOQthX9ZVZwJJaQE6abQtvlhjL2kK9a6z0dzfrygAj8LqIV7PKanqzona+8g1DkLJ5ptjNd0q/XtcAA==}
     peerDependencies:
-      '@ai-sdk/provider': ^2.0.0
+      '@ai-sdk/provider': ^3.0.1
       '@codemirror/state': ^6.0.0
       '@codemirror/view': ^6.0.0
       vue: ^3.0.0
@@ -139,14 +139,14 @@ packages:
   '@caido/sdk-shared@0.1.1':
     resolution: {integrity: sha512-JAV5ajUqxZdXYPTmDEvIKBZon8I5uHq44ATj0Nj3BVpllRDUGY9kcBd+PXMD50+3lv1CvhR3/f6q24T0+4aVJQ==}
 
-  '@caido/tailwindcss@0.0.1':
-    resolution: {integrity: sha512-BGp7s8BiZv6eBV8x/j0t5nPBVKP7Bm+gJVY4APcFgFkNkrRSRDo0VuXN52OhiHc/+vTg85lrmLO8IWMM5bcJrQ==}
+  '@caido/tailwindcss@0.1.0':
+    resolution: {integrity: sha512-QZ9KeyFOPl9UkC6J+YtzTsaYjaUd8QW3jwu5kwbUIIULJTWZBr7R1pHSYmoSWood5RNQw6stNY7s8v1e2H2aTA==}
 
   '@codemirror/state@6.5.2':
     resolution: {integrity: sha512-FVqsPqtPWKVVL3dPSxy8wEF/ymIEuVzF1PK3VbUgrxXpJUSHQWWZz4JMToquRxnkw+36LTamCZG2iua2Ptq0fA==}
 
-  '@codemirror/view@6.39.8':
-    resolution: {integrity: sha512-1rASYd9Z/mE3tkbC9wInRlCNyCkSn+nLsiQKZhEDUUJiUfs/5FHDpCUDaQpoTIaNGeDc6/bhaEAyLmeEucEFPw==}
+  '@codemirror/view@6.39.14':
+    resolution: {integrity: sha512-WJcvgHm/6Q7dvGT0YFv/6PSkoc36QlR0VCESS6x9tGsnF1lWLmmYxOgX3HH6v8fo6AvSLgpcs+H0Olre6MKXlg==}
 
   '@esbuild/aix-ppc64@0.24.2':
     resolution: {integrity: sha512-thpVCb/rhxE/BnMLQ7GReQLLN8q9qbHmI55F4489/ByVg2aQaQ6kbcLb6FHkocZzQhxc4gx0sCk0tJkKBFzDhA==}
@@ -1583,8 +1583,8 @@ packages:
   lodash.sortby@4.7.0:
     resolution: {integrity: sha512-HDWXG8isMntAyRF5vZ7xKuEvOhT4AhlRt/3czTSjvGUxjYCBVRQY48ViDHyfYz9VIoBkW4TMGQNapx+l3RUwdA==}
 
-  lodash@4.17.21:
-    resolution: {integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==}
+  lodash@4.17.23:
+    resolution: {integrity: sha512-LgVTMpQtIopCi79SJeDiP0TfWi5CNEc/L/aRdTh3yIvmZXTnheWpKjSZhnvMl8iXbC1tFg9gdHHDMLoV7CnG+w==}
 
   lru-cache@11.2.4:
     resolution: {integrity: sha512-B5Y16Jr9LB9dHVkh6ZevG+vAbOsNOYCX+sXvFWFu7B3Iz5mijW3zdbMyhsh8ANd2mSWBYdJgnqi+mL7/LrOPYg==}
@@ -2481,23 +2481,23 @@ snapshots:
     dependencies:
       primevue: 4.1.0(vue@3.5.26(typescript@5.9.3))
 
-  '@caido/quickjs-types@0.24.0': {}
+  '@caido/quickjs-types@0.25.4': {}
 
-  '@caido/sdk-backend@0.54.1':
+  '@caido/sdk-backend@0.55.3':
     dependencies:
-      '@caido/quickjs-types': 0.24.0
+      '@caido/quickjs-types': 0.25.4
       '@caido/sdk-shared': 0.1.1
 
-  '@caido/sdk-frontend@0.54.1(@ai-sdk/provider@2.0.0)(@codemirror/state@6.5.2)(@codemirror/view@6.39.8)(vue@3.5.26(typescript@5.9.3))':
+  '@caido/sdk-frontend@0.55.3(@ai-sdk/provider@2.0.0)(@codemirror/state@6.5.2)(@codemirror/view@6.39.14)(vue@3.5.26(typescript@5.9.3))':
     dependencies:
       '@ai-sdk/provider': 2.0.0
       '@codemirror/state': 6.5.2
-      '@codemirror/view': 6.39.8
+      '@codemirror/view': 6.39.14
       vue: 3.5.26(typescript@5.9.3)
 
   '@caido/sdk-shared@0.1.1': {}
 
-  '@caido/tailwindcss@0.0.1':
+  '@caido/tailwindcss@0.1.0':
     dependencies:
       tailwindcss: 3.4.13
     transitivePeerDependencies:
@@ -2507,7 +2507,7 @@ snapshots:
     dependencies:
       '@marijn/find-cluster-break': 1.0.2
 
-  '@codemirror/view@6.39.8':
+  '@codemirror/view@6.39.14':
     dependencies:
       '@codemirror/state': 6.5.2
       crelt: 1.0.6
@@ -4014,7 +4014,7 @@ snapshots:
 
   lodash.sortby@4.7.0: {}
 
-  lodash@4.17.21: {}
+  lodash@4.17.23: {}
 
   lru-cache@11.2.4: {}
 
