@@ -1,15 +1,15 @@
-name: 🚀 Release
+name: Release
 
 on:
   workflow_dispatch:
 
 env:
-  NODE_VERSION: 20
+  NODE_VERSION: 22
   PNPM_VERSION: 9
 
 jobs:
   release:
-    name: Release
+    name: 🚀 Release
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -44,6 +44,7 @@ jobs:
         run: |
           if [[ -z "${{ secrets.PRIVATE_KEY }}" ]]; then
             echo "Set an ed25519 key as PRIVATE_KEY in GitHub Action secret to sign."
+            exit 1
           else
             echo "${{ secrets.PRIVATE_KEY }}" > private_key.pem
             openssl pkeyutl -sign -inkey private_key.pem -out plugin_package.zip.sig -rawin -in plugin_package.zip
