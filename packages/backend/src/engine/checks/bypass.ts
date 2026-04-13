@@ -1,6 +1,7 @@
 import type { ParsedPolicy, PolicyFinding } from "shared";
 
 import { JSONP_CAPABLE_HOSTS } from "../../data";
+import { stripDomainPrefix } from "../../utils";
 import { emitFinding, isCheckEnabled } from "../../utils/findings";
 
 export function runBypassChecks(
@@ -13,8 +14,9 @@ export function runBypassChecks(
 
   for (const value of scriptSrc.values) {
     if (isCheckEnabled("jsonp-bypass-risk", enabledChecks)) {
+      const normalized = stripDomainPrefix(value);
       for (const host of JSONP_CAPABLE_HOSTS) {
-        if (value.includes(host)) {
+        if (normalized === host || normalized.endsWith(`.${host}`)) {
           findings.push(
             emitFinding(
               "jsonp-bypass-risk",

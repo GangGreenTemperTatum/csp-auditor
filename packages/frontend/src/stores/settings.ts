@@ -24,8 +24,9 @@ export const useSettingsStore = defineStore("stores.settings", () => {
 
   async function initialize() {
     if (initPromise !== undefined) return initPromise;
-    initPromise = loadAll().catch(() => {
+    initPromise = loadAll().catch((error) => {
       initPromise = undefined;
+      throw error;
     });
     await initPromise;
   }
@@ -48,14 +49,20 @@ export const useSettingsStore = defineStore("stores.settings", () => {
     }
   }
 
+  function showWriteError() {
+    sdk.window.showToast("Failed to save setting", { variant: "error" });
+  }
+
   async function updateScope(enabled: boolean) {
     const result = await sdk.backend.setScopeEnabled(enabled);
     if (result.kind === "Ok") scopeEnabled.value = enabled;
+    else showWriteError();
   }
 
   async function updateFindings(enabled: boolean) {
     const result = await sdk.backend.setFindingsEnabled(enabled);
     if (result.kind === "Ok") findingsEnabled.value = enabled;
+    else showWriteError();
   }
 
   async function updateSingleCheck(
@@ -65,6 +72,8 @@ export const useSettingsStore = defineStore("stores.settings", () => {
     const result = await sdk.backend.updateSingleCheck(checkId, enabled);
     if (result.kind === "Ok" && checkSettings.value[checkId] !== undefined) {
       checkSettings.value[checkId].enabled = enabled;
+    } else if (result.kind !== "Ok") {
+      showWriteError();
     }
   }
 
@@ -78,6 +87,8 @@ export const useSettingsStore = defineStore("stores.settings", () => {
       for (const id of Object.keys(checkSettings.value)) {
         checkSettings.value[id]!.enabled = enabled;
       }
+    } else {
+      showWriteError();
     }
   }
 
@@ -92,6 +103,8 @@ export const useSettingsStore = defineStore("stores.settings", () => {
       for (const [id, check] of Object.entries(checkSettings.value)) {
         check.enabled = settingsMap[id]!;
       }
+    } else {
+      showWriteError();
     }
   }
 
@@ -106,6 +119,8 @@ export const useSettingsStore = defineStore("stores.settings", () => {
       for (const [id, check] of Object.entries(checkSettings.value)) {
         check.enabled = settingsMap[id]!;
       }
+    } else {
+      showWriteError();
     }
   }
 

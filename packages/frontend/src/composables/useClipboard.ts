@@ -4,10 +4,16 @@ export function useClipboard() {
   const sdk = useSDK();
 
   const copyToClipboard = async (text: string, label?: string) => {
-    await navigator.clipboard.writeText(text);
-    sdk.window.showToast(label ?? "Copied to clipboard", {
-      variant: "success",
-    });
+    try {
+      await navigator.clipboard.writeText(text);
+      sdk.window.showToast(label ?? "Copied to clipboard", {
+        variant: "success",
+      });
+    } catch {
+      sdk.window.showToast("Failed to copy to clipboard", {
+        variant: "error",
+      });
+    }
   };
 
   return { copyToClipboard };

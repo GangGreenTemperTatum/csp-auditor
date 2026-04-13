@@ -17,6 +17,11 @@ export const useBypassData = defineStore("bypass-data", () => {
       const result = await sdk.backend.getBypassRecords();
       if (result.kind === "Ok") {
         records.value = result.value;
+      } else {
+        records.value = [];
+        sdk.window.showToast("Failed to load bypass records", {
+          variant: "error",
+        });
       }
     } finally {
       loading.value = false;

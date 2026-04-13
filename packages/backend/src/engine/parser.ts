@@ -98,7 +98,9 @@ export function parsePolicyHeader(
       sources: values.map(classifySource),
     };
 
-    policy.directives.set(name, directive);
+    if (!policy.directives.has(name)) {
+      policy.directives.set(name, directive);
+    }
   }
 
   applyDefaultSrcFallbacks(policy);

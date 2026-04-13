@@ -1,6 +1,6 @@
-import type { RawConfigurationOrFn } from "knip/dist/types/config.js";
+import type { KnipConfig } from "knip";
 
-const config: RawConfigurationOrFn = {
+const config: KnipConfig = {
   workspaces: {
     ".": {
       entry: ["caido.config.ts", "eslint.config.mjs", "vitest.config.ts"],

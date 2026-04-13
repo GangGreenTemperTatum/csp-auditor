@@ -57,17 +57,27 @@ export function init(sdk: SDK<API, BackendEventsType>) {
   sdk.api.register("getBypassRecords", apiGetBypassRecords);
 
   sdk.events.onInterceptResponse(async (_sdk, request, response) => {
-    const headers = response.getHeaders();
-    const cspHeaders = extractCspHeaders(headers);
-    if (cspHeaders.length === 0) return;
+    try {
+      const headers = response.getHeaders();
+      const cspHeaders = extractCspHeaders(headers);
+      if (cspHeaders.length === 0) return;
 
-    if (getScopeEnabled() && !_sdk.requests.inScope(request)) return;
+      if (getScopeEnabled() && !_sdk.requests.inScope(request)) return;
 
-    await processResponse(
-      { id: request.getId(), host: request.getHost(), path: request.getPath() },
-      { headers },
-      request,
-    );
+      await processResponse(
+        {
+          id: request.getId(),
+          host: request.getHost(),
+          path: request.getPath(),
+        },
+        { headers },
+        request,
+      );
+    } catch (error) {
+      sdk.console.error(
+        `CSP analysis failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
   });
 
   sdk.console.log("CSP Auditor v2.0 initialized");

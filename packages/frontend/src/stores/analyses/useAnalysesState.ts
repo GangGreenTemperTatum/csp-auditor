@@ -25,6 +25,7 @@ function transition(current: AnalysesState, message: Message): AnalysesState {
         return { type: "Error", error: message.error };
       if (message.type === "Success")
         return { type: "Success", analyses: message.analyses };
+      if (message.type === "Clear") return { type: "Idle" };
       return current;
     case "Error":
       if (message.type === "Start") return { type: "Loading" };

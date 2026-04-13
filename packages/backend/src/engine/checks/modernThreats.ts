@@ -1,6 +1,7 @@
 import type { CheckId, ParsedPolicy, PolicyFinding } from "shared";
 
 import { AI_ML_HOSTS, WEB3_HOSTS } from "../../data";
+import { stripDomainPrefix } from "../../utils";
 import { emitFinding, isCheckEnabled } from "../../utils/findings";
 
 const CDN_RISK_HOSTS = [
@@ -33,8 +34,9 @@ export function runModernThreatChecks(
 
     for (const [, directive] of policy.directives) {
       for (const value of directive.values) {
+        const normalized = stripDomainPrefix(value);
         for (const host of config.hosts) {
-          if (value === host || value.endsWith(`.${host}`)) {
+          if (normalized === host || normalized.endsWith(`.${host}`)) {
             findings.push(
               emitFinding(
                 config.checkId,
