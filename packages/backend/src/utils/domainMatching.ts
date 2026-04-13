@@ -16,7 +16,7 @@ export function stripDomainPrefix(domain: string): string {
   return domain
     .toLowerCase()
     .replace(/^https?:\/\//, "")
-    .replace(/\/.*$/, "");
+    .replace(/[/:?#].*$/, "");
 }
 
 export function isUserContentHost(domain: string): boolean {

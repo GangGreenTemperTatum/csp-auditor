@@ -30,7 +30,7 @@ export function runMissingDirectiveChecks(
     const baseUri = policy.directives.get("base-uri");
     if (
       baseUri === undefined ||
-      baseUri.values.includes("*") ||
+      baseUri.values.some((v) => v.includes("*")) ||
       baseUri.values.includes("'unsafe-inline'")
     ) {
       findings.push(

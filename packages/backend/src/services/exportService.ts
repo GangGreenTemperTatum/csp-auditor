@@ -22,6 +22,18 @@ export function exportAsJson(analyses: AnalysisResult[]): string {
   );
 }
 
+function escapeCsvCell(value: string): string {
+  if (
+    value.includes(",") ||
+    value.includes('"') ||
+    value.includes("\n") ||
+    value.includes("\r")
+  ) {
+    return `"${value.replace(/"/g, '""')}"`;
+  }
+  return value;
+}
+
 export function exportAsCsv(analyses: AnalysisResult[]): string {
   const headers = [
     "ID",
@@ -38,18 +50,20 @@ export function exportAsCsv(analyses: AnalysisResult[]): string {
 
   const rows = analyses.flatMap((a) => {
     const { host, path } = extractHostAndPath(a);
-    return a.findings.map((f) => [
-      f.id,
-      f.checkId,
-      f.severity,
-      f.directive,
-      f.value,
-      `"${f.description.replace(/"/g, '""')}"`,
-      host,
-      path,
-      a.analyzedAt.toISOString(),
-      f.requestId,
-    ]);
+    return a.findings.map((f) =>
+      [
+        f.id,
+        f.checkId,
+        f.severity,
+        f.directive,
+        f.value,
+        f.description,
+        host,
+        path,
+        a.analyzedAt.toISOString(),
+        f.requestId,
+      ].map(escapeCsvCell),
+    );
   });
 
   return [headers, ...rows].map((row) => row.join(",")).join("\n");

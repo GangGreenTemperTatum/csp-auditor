@@ -1,11 +1,9 @@
 import type { AnalysisResult } from "shared";
 
 export function formatDate(date: Date | string): string {
-  try {
-    return new Date(date).toLocaleString();
-  } catch {
-    return String(date);
-  }
+  const parsed = new Date(date);
+  if (isNaN(parsed.getTime())) return String(date);
+  return parsed.toLocaleString();
 }
 
 export function extractHostAndPath(analysis: AnalysisResult): {

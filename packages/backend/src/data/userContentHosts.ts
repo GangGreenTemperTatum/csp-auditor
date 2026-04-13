@@ -7,7 +7,7 @@ export const USER_CONTENT_HOST_PATTERNS = [
   "*.herokuapp.com",
   "dl.dropboxusercontent.com",
   "*.appspot.com",
-  "googleusercontent.com",
+  "*.googleusercontent.com",
   "*.blogspot.ae",
   "*.blogspot.al",
   "*.blogspot.am",

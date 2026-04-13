@@ -39,13 +39,21 @@ const summary = computed(() => {
     low: 0,
     info: 0,
   };
-  for (const f of allFindings) severityCounts[f.severity]++;
+  const checkIdCounts: Record<string, number> = {};
+  for (const f of allFindings) {
+    severityCounts[f.severity]++;
+    checkIdCounts[f.checkId] = (checkIdCounts[f.checkId] ?? 0) + 1;
+  }
+  const lastAnalyzedAt = a.reduce<Date | undefined>((latest, x) => {
+    if (latest === undefined) return x.analyzedAt;
+    return x.analyzedAt > latest ? x.analyzedAt : latest;
+  }, undefined);
   return {
     totalAnalyses: a.length,
     totalFindings: allFindings.length,
     severityCounts,
-    checkIdCounts: {} as Record<string, number>,
-    lastAnalyzedAt: undefined as Date | undefined,
+    checkIdCounts,
+    lastAnalyzedAt,
   };
 });
 

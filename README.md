@@ -3,7 +3,7 @@
 
   <br />
   <br />
-  <a href="https://github.com/caido-community" target="_blank">Github</a>
+  <a href="https://github.com/caido-community" target="_blank">GitHub</a>
   <span>&nbsp;&nbsp;&bull;&nbsp;&nbsp;</span>
   <a href="https://developer.caido.io/" target="_blank">Documentation</a>
   <span>&nbsp;&nbsp;&bull;&nbsp;&nbsp;</span>

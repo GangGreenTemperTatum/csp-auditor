@@ -11,6 +11,7 @@ import { buildDefaultCheckState } from "../data";
 import { analyzePolicy, extractCspHeaders, parsePolicyHeader } from "../engine";
 import { requireSDK } from "../sdk";
 
+const MAX_CACHE_ENTRIES = 10_000;
 const analysisCache = new Map<string, AnalysisResult>();
 let scopeEnabled = true;
 let findingsEnabled = false;
@@ -58,6 +59,10 @@ export async function processResponse(
     analyzedAt: new Date(),
   };
 
+  if (analysisCache.size >= MAX_CACHE_ENTRIES) {
+    const oldest = analysisCache.keys().next().value;
+    if (oldest !== undefined) analysisCache.delete(oldest);
+  }
   analysisCache.set(requestData.id, result);
   sdk.api.send("analysisUpdated");
 
@@ -73,13 +78,17 @@ export async function processResponse(
     );
     const description = lines.join("\n\n");
 
-    await sdk.findings.create({
-      title,
-      description,
-      reporter: "CSP Auditor",
-      request,
-      dedupeKey: `csp-${requestData.host}-${requestData.path}`,
-    });
+    try {
+      await sdk.findings.create({
+        title,
+        description,
+        reporter: "CSP Auditor",
+        request,
+        dedupeKey: `csp-${requestData.host}-${requestData.path}`,
+      });
+    } catch {
+      sdk.console.error(`Failed to create finding for ${requestData.host}`);
+    }
   }
 
   return result;
@@ -112,12 +121,17 @@ export function computeSummary(): AnalysisSummary {
     checkIdCounts[finding.checkId] = (checkIdCounts[finding.checkId] ?? 0) + 1;
   }
 
+  const lastAnalyzedAt = analyses.reduce<Date | undefined>((latest, a) => {
+    if (latest === undefined) return a.analyzedAt;
+    return a.analyzedAt > latest ? a.analyzedAt : latest;
+  }, undefined);
+
   return {
     totalAnalyses: analyses.length,
     totalFindings: allFindings.length,
     severityCounts,
     checkIdCounts,
-    lastAnalyzedAt: analyses.length > 0 ? analyses[0]?.analyzedAt : undefined,
+    lastAnalyzedAt,
   };
 }
 

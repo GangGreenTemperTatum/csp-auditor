@@ -17,25 +17,31 @@ function triggerDownload(content: string, filename: string, mimeType: string) {
 export function useExportDownload() {
   const sdk = useSDK();
 
-  const downloadAsJson = async () => {
-    const result = await sdk.backend.exportFindings("json");
-    if (result.kind === "Ok") {
-      triggerDownload(result.value, "csp-findings.json", "application/json");
-      sdk.window.showToast("Exported as JSON", { variant: "success" });
-    } else {
+  const downloadExport = async (
+    format: "json" | "csv",
+    filename: string,
+    mimeType: string,
+  ) => {
+    try {
+      const result = await sdk.backend.exportFindings(format);
+      if (result.kind === "Ok") {
+        triggerDownload(result.value, filename, mimeType);
+        sdk.window.showToast(`Exported as ${format.toUpperCase()}`, {
+          variant: "success",
+        });
+      } else {
+        sdk.window.showToast("Export failed", { variant: "error" });
+      }
+    } catch {
       sdk.window.showToast("Export failed", { variant: "error" });
     }
   };
 
-  const downloadAsCsv = async () => {
-    const result = await sdk.backend.exportFindings("csv");
-    if (result.kind === "Ok") {
-      triggerDownload(result.value, "csp-findings.csv", "text/csv");
-      sdk.window.showToast("Exported as CSV", { variant: "success" });
-    } else {
-      sdk.window.showToast("Export failed", { variant: "error" });
-    }
-  };
+  const downloadAsJson = () =>
+    downloadExport("json", "csp-findings.json", "application/json");
+
+  const downloadAsCsv = () =>
+    downloadExport("csv", "csp-findings.csv", "text/csv");
 
   return { downloadAsJson, downloadAsCsv };
 }

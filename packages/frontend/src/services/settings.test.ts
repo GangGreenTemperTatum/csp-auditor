@@ -10,8 +10,12 @@ const mockBackend = {
   updateSingleCheck: vi.fn(),
 };
 
+const mockWindow = {
+  showToast: vi.fn(),
+};
+
 vi.mock("@/plugins/sdk", () => ({
-  useSDK: () => ({ backend: mockBackend }),
+  useSDK: () => ({ backend: mockBackend, window: mockWindow }),
 }));
 
 const { useSettingsService } = await import("./settings");
@@ -57,7 +61,7 @@ describe("useSettingsService", () => {
       mockBackend.getCheckSettings.mockResolvedValue({ kind: "Ok", value: {} });
 
       const service = useSettingsService();
-      await service.initialize();
+      await service.initialize().catch(() => {});
       await service.initialize();
 
       expect(mockBackend.getScopeEnabled).toHaveBeenCalledTimes(2);
