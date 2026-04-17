@@ -15,9 +15,9 @@ export default defineConfig({
   description: "Content Security Policy vulnerability scanner and analyzer",
   version: "2.0.0",
   author: {
-    name: "Amr Elsagaei",
-    email: "amr@caido.io",
-    url: "https://amrelsagaei.com",
+    name: "Caido Labs Inc.",
+    email: "dev@caido.io",
+    url: "https://caido.io",
   },
   plugins: [
     {
